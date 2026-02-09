@@ -14,5 +14,9 @@ __pycache__
 .pytest_cache
 .mypy_cache
 
+# Test / Coverage artifacts
+.coverage
+htmlcov/
+
 # Distribution / Packaging
 .egg-info
