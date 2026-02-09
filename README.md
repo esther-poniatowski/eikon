@@ -12,16 +12,29 @@ Figure management library for programmatic creation, styling, and export of scie
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Documentation](#documentation)
-- [Support](#support)
-- [Contributing](#contributing)
-- [Acknowledgments](#acknowledgments)
-- [License](#license)
+- [Eikon](#eikon)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+    - [Motivations](#motivations)
+    - [Advantages](#advantages)
+  - [Features](#features)
+  - [Installation](#installation)
+    - [Using Pip Installs Packages](#using-pip-installs-packages)
+    - [Using Conda](#using-conda)
+    - [From Source](#from-source)
+  - [Usage](#usage)
+    - [Command Line Interface (CLI)](#command-line-interface-cli)
+    - [Programmatic Usage](#programmatic-usage)
+  - [Configuration](#configuration)
+    - [Environment Variables](#environment-variables)
+    - [Configuration File](#configuration-file)
+  - [Documentation](#documentation)
+  - [Support](#support)
+  - [Contributing](#contributing)
+  - [Acknowledgments](#acknowledgments)
+    - [Authors \& Contributors](#authors--contributors)
+    - [Third-Party Dependencies](#third-party-dependencies)
+  - [License](#license)
 
 ## Overview
 
@@ -43,11 +56,14 @@ scientific visualizations built on top of matplotlib.
 
 - [ ] **Declarative figure specifications**: Define figures as structured objects with layout,
   styling, and export settings.
+- [ ] **Data manipulation**: Specify data sources and formatting for each figure, or modularly for a
+  set of figures.
 - [ ] **Consistent styling**: Apply and manage style sheets for uniform aesthetics across figures.
 - [ ] **Layout management**: Compose multi-panel figures with flexible grid specifications.
 - [ ] **Export pipelines**: Batch export figures to multiple formats (PDF, SVG, PNG) with
   configurable resolution and metadata.
 - [ ] **Figure registry**: Track and organize figures across analyses and manuscripts.
+- [ ] **Extensibility**: Use `matplotlib` and `seaborn` together in the same pipeline.
 
 ---
 
