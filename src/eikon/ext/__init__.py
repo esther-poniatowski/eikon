@@ -12,6 +12,12 @@ from eikon.ext._plot_types import (
     plot_type,
     register_plot_type,
 )
+from eikon.ext._transforms import (
+    apply_transforms,
+    clear_transforms,
+    list_transforms,
+    register_transform,
+)
 
 __all__ = [
     "HookName",
@@ -23,4 +29,8 @@ __all__ = [
     "plot_type",
     "register_hook",
     "register_plot_type",
+    "apply_transforms",
+    "clear_transforms",
+    "list_transforms",
+    "register_transform",
 ]

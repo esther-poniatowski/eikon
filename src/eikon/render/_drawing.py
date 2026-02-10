@@ -7,9 +7,11 @@ for each panel, it looks up the registered plot function by
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from eikon.ext._plot_types import get_plot_type
+from eikon.render._data import resolve_data_binding
 from eikon.spec._panel import PanelSpec
 
 __all__ = ["draw_panel", "draw_all_panels"]
@@ -18,6 +20,8 @@ __all__ = ["draw_panel", "draw_all_panels"]
 def draw_panel(
     ax: Any,
     panel: PanelSpec,
+    *,
+    data_dir: Path,
 ) -> None:
     """Draw a single panel using its registered plot function.
 
@@ -34,12 +38,19 @@ def draw_panel(
         If the panel's ``plot_type`` is not registered.
     """
     plot_fn = get_plot_type(panel.plot_type)
-    plot_fn(ax, **panel.params)
+
+    data_kwargs = {}
+    if panel.data is not None:
+        data_kwargs = resolve_data_binding(panel.data, data_dir)
+
+    plot_fn(ax, **data_kwargs, **panel.params)
 
 
 def draw_all_panels(
     axes: dict[str, Any],
     panels: tuple[PanelSpec, ...],
+    *,
+    data_dir: Path,
 ) -> None:
     """Draw all panels into their corresponding axes.
 
@@ -52,4 +63,4 @@ def draw_all_panels(
     """
     for panel in panels:
         if panel.name in axes:
-            draw_panel(axes[panel.name], panel)
+            draw_panel(axes[panel.name], panel, data_dir=data_dir)

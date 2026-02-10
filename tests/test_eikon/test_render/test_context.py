@@ -1,8 +1,19 @@
 """Tests for eikon.render._context — RenderContext."""
 
+from pathlib import Path
+
 from eikon.config._defaults import DEFAULT_CONFIG
+from eikon.config._resolver import ResolvedPaths
 from eikon.render._context import RenderContext
 from eikon.spec._figure import FigureSpec
+
+_DUMMY_PATHS = ResolvedPaths(
+    project_root=Path("/tmp"),
+    output_dir=Path("/tmp/figures"),
+    styles_dir=Path("/tmp/styles"),
+    specs_dir=Path("/tmp/specs"),
+    data_dir=Path("/tmp/data"),
+)
 
 
 class TestRenderContext:
@@ -10,7 +21,7 @@ class TestRenderContext:
 
     def test_construction_minimal(self) -> None:
         spec = FigureSpec(name="fig1")
-        ctx = RenderContext(spec=spec, config=DEFAULT_CONFIG)
+        ctx = RenderContext(spec=spec, config=DEFAULT_CONFIG, paths=_DUMMY_PATHS)
         assert ctx.spec is spec
         assert ctx.config is DEFAULT_CONFIG
         assert ctx.style is None
@@ -24,6 +35,7 @@ class TestRenderContext:
         ctx = RenderContext(
             spec=spec,
             config=DEFAULT_CONFIG,
+            paths=_DUMMY_PATHS,
             export_formats=("pdf", "svg"),
             show=True,
             overrides={"dpi": 600},
@@ -37,7 +49,7 @@ class TestRenderContext:
         from eikon.style._sheet import StyleSheet
 
         spec = FigureSpec(name="fig1")
-        ctx = RenderContext(spec=spec, config=DEFAULT_CONFIG)
+        ctx = RenderContext(spec=spec, config=DEFAULT_CONFIG, paths=_DUMMY_PATHS)
         sheet = StyleSheet(name="test")
         ctx.style = sheet
         assert ctx.style is sheet

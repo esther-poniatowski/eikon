@@ -9,9 +9,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from eikon.config._defaults import DEFAULT_CONFIG
+from eikon.config._loader import load_config
+from eikon.config._resolver import ResolvedPaths, resolve_paths
 from eikon.config._schema import ProjectConfig
 from eikon.exceptions import RenderError
+from eikon.ext import discover_plugins
 from eikon.ext._hooks import HookName, fire_hook
 from eikon.layout._builder import build_layout
 from eikon.layout._constraints import validate_layout_strict
@@ -34,6 +36,7 @@ def render_figure(
     spec: FigureSpec,
     *,
     config: ProjectConfig | None = None,
+    resolved_paths: ResolvedPaths | None = None,
     formats: tuple[str, ...] = (),
     show: bool = False,
     overrides: dict[str, Any] | None = None,
@@ -64,10 +67,15 @@ def render_figure(
         If any stage of the pipeline fails.
     """
     import eikon.contrib  # noqa: F401  — register built-in plot types lazily
+    discover_plugins()
+
+    cfg = config or load_config()
+    paths = resolved_paths or resolve_paths(cfg.paths)
 
     ctx = RenderContext(
         spec=spec,
-        config=config or DEFAULT_CONFIG,
+        config=cfg,
+        paths=paths,
         export_formats=formats,
         show=show,
         overrides=overrides or {},
@@ -117,7 +125,7 @@ def _resolve_style(ctx: RenderContext) -> None:
         ctx.style = StyleSheet(name="default")
         return
 
-    sheet = load_style(style_ref)
+    sheet = load_style(style_ref, search_dirs=(ctx.paths.styles_dir,))
     if sheet.extends:
         registry = dict(PRESETS)
         sheet = resolve_style_chain(sheet, registry)
@@ -152,7 +160,11 @@ def _draw_panels(ctx: RenderContext) -> None:
     assert ctx.layout is not None
     assert ctx.style is not None
     with style_context(ctx.style):
-        draw_all_panels(ctx.layout.axes, ctx.spec.panels)
+        draw_all_panels(
+            ctx.layout.axes,
+            ctx.spec.panels,
+            data_dir=ctx.paths.data_dir,
+        )
 
 
 def _post_process(ctx: RenderContext) -> None:
@@ -176,16 +188,11 @@ def _export_figure(ctx: RenderContext, figure: Any) -> dict[str, Path]:
 
     export_spec = parse_export_spec(ctx.spec.export)
 
-    output_dir = Path(ctx.config.paths.output_dir)
-    # If output_dir is relative, resolve against cwd
-    if not output_dir.is_absolute():
-        output_dir = Path.cwd() / output_dir
-
     return batch_export(
         figure=figure,
         name=ctx.spec.name,
         group=ctx.spec.group,
-        output_dir=output_dir,
+        output_dir=ctx.paths.output_dir,
         export_defaults=ctx.config.export,
         export_spec=export_spec,
         cli_formats=ctx.export_formats,

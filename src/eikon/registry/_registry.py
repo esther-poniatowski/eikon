@@ -54,6 +54,7 @@ class Registry:
         group: str = "",
         metadata: dict[str, str] | None = None,
         on_conflict: Literal["update", "fail", "skip"] = "update",
+        spec_path: str | None = None,
     ) -> None:
         """Register a figure in the registry.
 
@@ -65,13 +66,15 @@ class Registry:
             Organizational tags.
         group : str
             Grouping key (e.g. ``"manuscript-1"``).
-        metadata : dict[str, str], optional
-            Arbitrary metadata fields.
-        on_conflict : {"update", "fail", "skip"}
-            How to handle duplicate names.
-            - ``"update"`` (default) — replace the existing entry.
-            - ``"fail"`` — raise ``RegistryError``.
-            - ``"skip"`` — keep the existing entry.
+            metadata : dict[str, str], optional
+                Arbitrary metadata fields.
+            on_conflict : {"update", "fail", "skip"}
+                How to handle duplicate names.
+                - ``"update"`` (default) — replace the existing entry.
+                - ``"fail"`` — raise ``RegistryError``.
+                - ``"skip"`` — keep the existing entry.
+            spec_path : str, optional
+                Path to the figure specification YAML file (relative or absolute).
 
         Raises
         ------
@@ -89,6 +92,7 @@ class Registry:
             "tags": list(tags),
             "group": group,
             "metadata": dict(metadata) if metadata else {},
+            "spec_path": spec_path or "",
             "registered_at": datetime.datetime.now(tz=datetime.UTC).isoformat(),
         }
 

@@ -40,7 +40,8 @@ try:
 except PackageNotFoundError:
     __version__ = "0.0.0+unknown"
 
-from eikon.config import ProjectConfig, load_config  # noqa: E402
+from eikon.config import ProjectConfig, load_config, resolve_paths  # noqa: E402
+from eikon.config._resolver import ResolvedPaths  # noqa: E402
 from eikon.export import ExportSpec, batch_export  # noqa: E402
 from eikon.layout import BuiltLayout, LayoutSpec, build_layout  # noqa: E402
 from eikon.registry import Registry  # noqa: E402
@@ -55,6 +56,7 @@ __all__ = [
     # Configuration
     "ProjectConfig",
     "load_config",
+    "resolve_paths",
     # Specifications
     "FigureSpec",
     "PanelSpec",
@@ -93,6 +95,7 @@ def render(
     name_or_spec: str | FigureSpec,
     *,
     config: ProjectConfig | None = None,
+    resolved_paths: ResolvedPaths | None = None,
     formats: tuple[str, ...] = (),
     overrides: dict[str, object] | None = None,
     show: bool = False,
@@ -124,19 +127,44 @@ def render(
     """
     from pathlib import Path
 
+    cfg = config or load_config()
+    paths = resolved_paths or resolve_paths(cfg.paths)
+
     if isinstance(name_or_spec, str):
         from eikon.spec import parse_figure_file
 
+        spec_entry = None
+        try:
+            reg = load_registry(config=cfg)
+            spec_entry = reg.get(name_or_spec)
+        except Exception:
+            spec_entry = None
+
         spec_path = Path(name_or_spec)
-        if not spec_path.suffix:
-            spec_path = spec_path.with_suffix(".yaml")
+        if spec_entry and spec_entry.get("spec_path"):
+            spec_path = Path(spec_entry["spec_path"])
+            if not spec_path.is_absolute():
+                spec_path = paths.project_root / spec_path
+        else:
+            if not spec_entry:
+                import warnings
+
+                warnings.warn(
+                    f"Figure '{name_or_spec}' not found in registry; falling back to specs_dir.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+            if not spec_path.suffix:
+                spec_path = paths.specs_dir / f"{spec_path.name}.yaml"
+
         spec = parse_figure_file(spec_path)
     else:
         spec = name_or_spec
 
     return render_figure(
         spec,
-        config=config,
+        config=cfg,
+        resolved_paths=paths,
         formats=formats,
         show=show,
         overrides=dict(overrides) if overrides else {},
@@ -158,13 +186,13 @@ def load_registry(*, config: ProjectConfig | None = None) -> Registry:
     """
     from pathlib import Path
 
-    from eikon.config._defaults import DEFAULT_CONFIG
+    cfg = config or load_config()
+    paths = resolve_paths(cfg.paths)
 
-    cfg = config or DEFAULT_CONFIG
-    registry_path = Path(cfg.registry_file)
-    if not registry_path.is_absolute():
-        registry_path = Path.cwd() / registry_path
+    registry_path = cfg.registry_file
+    if not Path(registry_path).is_absolute():
+        registry_path = paths.project_root / registry_path
 
-    reg = Registry(registry_path)
+    reg = Registry(Path(registry_path))
     reg.load()
     return reg

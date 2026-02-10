@@ -1,5 +1,6 @@
 """Tests for eikon.render._drawing — panel draw dispatch."""
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,33 +19,33 @@ def _clean_registry() -> None:
 class TestDrawPanel:
     """draw_panel dispatches to the registered plot function."""
 
-    def test_calls_registered_function(self) -> None:
+    def test_calls_registered_function(self, tmp_path: Path) -> None:
         fn = MagicMock()
         register_plot_type("mock_type", fn)
         ax = MagicMock()
         panel = PanelSpec(name="A", plot_type="mock_type", params={"color": "red"})
-        draw_panel(ax, panel)
+        draw_panel(ax, panel, data_dir=tmp_path)
         fn.assert_called_once_with(ax, color="red")
 
-    def test_raises_for_unknown_type(self) -> None:
+    def test_raises_for_unknown_type(self, tmp_path: Path) -> None:
         ax = MagicMock()
         panel = PanelSpec(name="A", plot_type="nonexistent")
         with pytest.raises(Exception, match="nonexistent"):
-            draw_panel(ax, panel)
+            draw_panel(ax, panel, data_dir=tmp_path)
 
-    def test_empty_params(self) -> None:
+    def test_empty_params(self, tmp_path: Path) -> None:
         fn = MagicMock()
         register_plot_type("bare", fn)
         ax = MagicMock()
         panel = PanelSpec(name="A", plot_type="bare")
-        draw_panel(ax, panel)
+        draw_panel(ax, panel, data_dir=tmp_path)
         fn.assert_called_once_with(ax)
 
 
 class TestDrawAllPanels:
     """draw_all_panels iterates panels and matches them to axes."""
 
-    def test_draws_matching_panels(self) -> None:
+    def test_draws_matching_panels(self, tmp_path: Path) -> None:
         fn = MagicMock()
         register_plot_type("t", fn)
         ax_a = MagicMock()
@@ -54,18 +55,18 @@ class TestDrawAllPanels:
             PanelSpec(name="B", plot_type="t", params={"x": 2}),
         )
         axes = {"A": ax_a, "B": ax_b}
-        draw_all_panels(axes, panels)
+        draw_all_panels(axes, panels, data_dir=tmp_path)
         assert fn.call_count == 2
         fn.assert_any_call(ax_a, x=1)
         fn.assert_any_call(ax_b, x=2)
 
-    def test_skips_panel_without_matching_axes(self) -> None:
+    def test_skips_panel_without_matching_axes(self, tmp_path: Path) -> None:
         fn = MagicMock()
         register_plot_type("t", fn)
         panels = (PanelSpec(name="missing", plot_type="t"),)
         axes: dict[str, MagicMock] = {"A": MagicMock()}
-        draw_all_panels(axes, panels)
+        draw_all_panels(axes, panels, data_dir=tmp_path)
         fn.assert_not_called()
 
-    def test_empty_panels(self) -> None:
-        draw_all_panels({"A": MagicMock()}, ())
+    def test_empty_panels(self, tmp_path: Path) -> None:
+        draw_all_panels({"A": MagicMock()}, (), data_dir=tmp_path)

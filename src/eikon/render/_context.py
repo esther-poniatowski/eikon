@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from eikon.config._resolver import ResolvedPaths
 from eikon.config._schema import ProjectConfig
 from eikon.layout._builder import BuiltLayout
 from eikon.spec._figure import FigureSpec
@@ -42,8 +43,10 @@ class RenderContext:
 
     spec: FigureSpec
     config: ProjectConfig
+    paths: ResolvedPaths
     style: StyleSheet | None = None
     layout: BuiltLayout | None = None
     export_formats: tuple[str, ...] = ()
     show: bool = False
     overrides: dict[str, Any] = field(default_factory=dict)
+    data: dict[str, dict[str, Any]] = field(default_factory=dict)

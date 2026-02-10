@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from eikon.ext import clear_transforms
+
 
 @pytest.fixture()
 def tmp_project(tmp_path: Path) -> Path:
@@ -35,6 +37,12 @@ registry_file: eikon-registry.yaml
     for dirname in ("figures", "styles", "specs", "data"):
         (tmp_path / dirname).mkdir()
     return tmp_path
+
+
+@pytest.fixture(autouse=True)
+def _clear_transforms() -> None:
+    """Reset registered data transforms between tests."""
+    clear_transforms()
 
 
 @pytest.fixture()
