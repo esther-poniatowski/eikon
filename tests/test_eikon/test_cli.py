@@ -14,6 +14,27 @@ from eikon.ext._plot_types import _clear_registry, register_plot_type
 matplotlib.use("Agg")
 runner = CliRunner()
 
+_EIKON_YAML = """\
+paths:
+  output_dir: figures
+  styles_dir: styles
+  specs_dir: specs
+  data_dir: data
+
+export:
+  formats: [pdf]
+  dpi: 300
+  transparent: false
+
+style:
+  base_style: default
+  font_family: serif
+  font_size: 10.0
+  figure_size: [6.4, 4.8]
+
+registry_file: eikon-registry.yaml
+"""
+
 
 def _noop_plot(ax: object, **kwargs: object) -> None:
     """Minimal plot function for testing."""
@@ -107,12 +128,67 @@ class TestCliProjectRoot:
         os.environ.pop("EIKON_PROJECT_ROOT", None)
         assert result.exit_code == 0
 
+    def test_render_uses_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
+        import os
+        # create a figure spec under the project
+        spec_path = tmp_project / "specs" / "rooted.yaml"
+        spec_path.write_text(
+            "name: rooted\npanels:\n  - name: A\n    plot_type: line\n",
+            encoding="utf-8",
+        )
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        monkeypatch.chdir(elsewhere)
+        try:
+            result = runner.invoke(
+                app,
+                ["--project-root", str(tmp_project), "render", str(spec_path), "-f", "pdf"],
+            )
+        finally:
+            os.environ.pop("EIKON_PROJECT_ROOT", None)
+
+        assert result.exit_code == 0
+        assert (tmp_project / "figures" / "rooted.pdf").exists()
+
+    def test_batch_uses_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
+        import os
+        spec_path = tmp_project / "specs" / "b1.yaml"
+        spec_path.write_text(
+            "name: b1\npanels:\n  - name: A\n    plot_type: line\n", encoding="utf-8"
+        )
+        elsewhere = tmp_path / "elsewhere-batch"
+        elsewhere.mkdir()
+        monkeypatch.chdir(elsewhere)
+        try:
+            result = runner.invoke(
+                app,
+                ["--project-root", str(tmp_project), "batch", "-f", "pdf"],
+            )
+        finally:
+            os.environ.pop("EIKON_PROJECT_ROOT", None)
+        assert result.exit_code == 0
+        assert (tmp_project / "figures" / "b1.pdf").exists()
+
+    def test_registry_with_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
+        import os
+        elsewhere = tmp_path / "elsewhere-reg"
+        elsewhere.mkdir()
+        monkeypatch.chdir(elsewhere)
+        try:
+            result = runner.invoke(
+                app,
+                ["--project-root", str(tmp_project), "registry", "list"],
+            )
+        finally:
+            os.environ.pop("EIKON_PROJECT_ROOT", None)
+        assert result.exit_code == 0
+
 
 class TestCliRegistry:
     """CLI registry subcommands (list, add, remove, show)."""
 
-    def test_add_and_list(self, tmp_path: Path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def test_add_and_list(self, tmp_project: Path, monkeypatch):
+        monkeypatch.chdir(tmp_project)
         result = runner.invoke(app, ["registry", "add", "fig1", "--tag", "a"])
         assert result.exit_code == 0
         assert "Registered" in result.output
@@ -121,38 +197,38 @@ class TestCliRegistry:
         assert result.exit_code == 0
         assert "fig1" in result.output
 
-    def test_show(self, tmp_path: Path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def test_show(self, tmp_project: Path, monkeypatch):
+        monkeypatch.chdir(tmp_project)
         runner.invoke(app, ["registry", "add", "fig1", "--group", "g1"])
         result = runner.invoke(app, ["registry", "show", "fig1"])
         assert result.exit_code == 0
         assert "g1" in result.output
 
-    def test_show_missing(self, tmp_path: Path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def test_show_missing(self, tmp_project: Path, monkeypatch):
+        monkeypatch.chdir(tmp_project)
         result = runner.invoke(app, ["registry", "show", "nope"])
         assert result.exit_code == 1
 
-    def test_remove(self, tmp_path: Path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def test_remove(self, tmp_project: Path, monkeypatch):
+        monkeypatch.chdir(tmp_project)
         runner.invoke(app, ["registry", "add", "fig1"])
         result = runner.invoke(app, ["registry", "remove", "fig1"])
         assert result.exit_code == 0
         assert "Removed" in result.output
 
-    def test_remove_missing(self, tmp_path: Path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def test_remove_missing(self, tmp_project: Path, monkeypatch):
+        monkeypatch.chdir(tmp_project)
         result = runner.invoke(app, ["registry", "remove", "nope"])
         assert result.exit_code == 1
 
-    def test_list_empty(self, tmp_path: Path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def test_list_empty(self, tmp_project: Path, monkeypatch):
+        monkeypatch.chdir(tmp_project)
         result = runner.invoke(app, ["registry", "list"])
         assert result.exit_code == 0
         assert "No figures" in result.output
 
-    def test_list_with_tag_filter(self, tmp_path: Path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def test_list_with_tag_filter(self, tmp_project: Path, monkeypatch):
+        monkeypatch.chdir(tmp_project)
         runner.invoke(app, ["registry", "add", "fig1", "--tag", "neural"])
         runner.invoke(app, ["registry", "add", "fig2", "--tag", "behavioral"])
         result = runner.invoke(app, ["registry", "list", "--tag", "neural"])
@@ -160,8 +236,8 @@ class TestCliRegistry:
         assert "fig1" in result.output
         assert "fig2" not in result.output
 
-    def test_add_conflict_fail(self, tmp_path: Path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def test_add_conflict_fail(self, tmp_project: Path, monkeypatch):
+        monkeypatch.chdir(tmp_project)
         runner.invoke(app, ["registry", "add", "fig1"])
         result = runner.invoke(
             app, ["registry", "add", "fig1", "--on-conflict", "fail"]
@@ -198,6 +274,7 @@ class TestCliBatch:
 
     def test_batch_explicit_specs(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
+        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
         (tmp_path / "figures").mkdir()
         s1 = _write_spec(tmp_path / "a.yaml", "fig-a")
         s2 = _write_spec(tmp_path / "b.yaml", "fig-b")
@@ -207,6 +284,7 @@ class TestCliBatch:
 
     def test_batch_scans_specs_dir(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
+        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
         specs_dir = tmp_path / "specs"
         specs_dir.mkdir()
         (tmp_path / "figures").mkdir()
@@ -218,12 +296,14 @@ class TestCliBatch:
 
     def test_batch_no_specs_dir_fails(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
+        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
         result = runner.invoke(app, ["batch"])
         assert result.exit_code == 1
         assert "not found" in result.output.lower()
 
     def test_batch_tag_filter(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
+        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
         specs_dir = tmp_path / "specs"
         specs_dir.mkdir()
         (tmp_path / "figures").mkdir()
@@ -235,6 +315,7 @@ class TestCliBatch:
 
     def test_batch_group_filter(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
+        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
         specs_dir = tmp_path / "specs"
         specs_dir.mkdir()
         (tmp_path / "figures").mkdir()
@@ -246,6 +327,7 @@ class TestCliBatch:
 
     def test_batch_no_matches(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
+        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
         specs_dir = tmp_path / "specs"
         specs_dir.mkdir()
         _write_spec(specs_dir / "a.yaml", "a", tags=["x"])
@@ -255,6 +337,7 @@ class TestCliBatch:
 
     def test_batch_continue_on_error(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
+        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
         (tmp_path / "figures").mkdir()
         good = _write_spec(tmp_path / "good.yaml", "good")
         bad = tmp_path / "bad.yaml"
