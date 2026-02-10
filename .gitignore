@@ -20,3 +20,6 @@ htmlcov/
 
 # Distribution / Packaging
 .egg-info
+
+# Sphinx build output
+docs/_build/

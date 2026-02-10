@@ -1,40 +1,12 @@
 # Eikon
 
-[![Conda](https://img.shields.io/badge/conda-eresthanaconda--channel-blue)](#installation)
-[![Maintenance](https://img.shields.io/maintenance/yes/2026)]()
+[![Python](https://img.shields.io/badge/python-%3E%3D3.12-blue)](https://www.python.org/)
+[![License: GPL](https://img.shields.io/badge/License-GPL--3.0-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 [![Last Commit](https://img.shields.io/github/last-commit/esther-poniatowski/eikon)](https://github.com/esther-poniatowski/eikon/commits/main)
-[![Python](https://img.shields.io/badge/python-supported-blue)](https://www.python.org/)
-[![License: GPL](https://img.shields.io/badge/License-GPL-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 
 Figure management library for programmatic creation, styling, and export of scientific visualizations.
 
 ---
-
-## Table of Contents
-
-- [Eikon](#eikon)
-  - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
-    - [Motivations](#motivations)
-    - [Advantages](#advantages)
-  - [Features](#features)
-  - [Installation](#installation)
-    - [Using Pip Installs Packages](#using-pip-installs-packages)
-    - [Using Conda](#using-conda)
-    - [From Source](#from-source)
-  - [Usage](#usage)
-    - [Command Line Interface (CLI)](#command-line-interface-cli)
-    - [Programmatic Usage](#programmatic-usage)
-  - [Configuration](#configuration)
-    - [Environment Variables](#environment-variables)
-    - [Configuration File](#configuration-file)
-  - [Documentation](#documentation)
-  - [Support](#support)
-  - [Contributing](#contributing)
-  - [Acknowledgments](#acknowledgments)
-    - [Authors \& Contributors](#authors--contributors)
-    - [Third-Party Dependencies](#third-party-dependencies)
-  - [License](#license)
 
 ## Overview
 
@@ -48,78 +20,98 @@ a structured approach.
 ### Advantages
 
 Eikon provides a figure management framework for programmatic creation, styling, and export of
-scientific visualizations built on top of matplotlib.
+scientific visualizations built on top of matplotlib. Define figures declaratively in YAML, apply
+composable styles, and export to multiple formats with a single command.
 
 ---
 
 ## Features
 
-- [ ] **Declarative figure specifications**: Define figures as structured objects with layout,
-  styling, and export settings.
-- [ ] **Data manipulation**: Specify data sources and formatting for each figure, or modularly for a
-  set of figures.
-- [ ] **Consistent styling**: Apply and manage style sheets for uniform aesthetics across figures.
-- [ ] **Layout management**: Compose multi-panel figures with flexible grid specifications.
-- [ ] **Export pipelines**: Batch export figures to multiple formats (PDF, SVG, PNG) with
-  configurable resolution and metadata.
-- [ ] **Figure registry**: Track and organize figures across analyses and manuscripts.
-- [ ] **Extensibility**: Use `matplotlib` and `seaborn` together in the same pipeline.
+- [x] **Declarative figure specifications**: Define figures as structured objects with layout,
+  styling, and export settings in YAML or Python.
+- [x] **Data binding**: Specify data sources, column mappings, and reusable transforms for each panel.
+- [x] **Consistent styling**: Apply composable style sheets with built-in presets
+  (publication, presentation, poster) and custom YAML styles.
+- [x] **Layout management**: Compose multi-panel figures with flexible grid specifications,
+  shared axes, colorbars, and insets.
+- [x] **Export pipeline**: Batch export figures to PDF, SVG, and PNG with configurable
+  resolution, metadata injection, and filename templates.
+- [x] **Figure registry**: Track and organize figures across analyses with tags, groups, and
+  a YAML-backed registry manifest.
+- [x] **Extensibility**: Register custom plot types via decorators, add data transforms,
+  and hook into the render/export lifecycle. Plugin discovery via entry points.
 
 ---
 
 ## Installation
 
-To install the package and its dependencies, use one of the following methods:
-
-### Using Pip Installs Packages
-
-Install the package from the GitHub repository URL via `pip`:
+### Using pip
 
 ```bash
 pip install git+https://github.com/esther-poniatowski/eikon.git
 ```
 
-### Using Conda
-
-Install the package from the private channel eresthanaconda:
+### From source
 
 ```bash
-conda install eikon -c eresthanaconda
+git clone https://github.com/esther-poniatowski/eikon.git
+cd eikon
+pip install -e .
 ```
 
-### From Source
+For development tools:
 
-1. Clone the repository:
-
-      ```bash
-      git clone https://github.com/esther-poniatowski/eikon.git
-      ```
-
-2. Create a dedicated virtual environment:
-
-      ```bash
-      cd eikon
-      conda env create -f environment.yml
-      ```
+```bash
+pip install -e ".[dev]"
+```
 
 ---
 
-## Usage
+## Quick Start
 
-### Command Line Interface (CLI)
+### Initialize a project
 
-To display the list of available commands and options:
-
-```sh
-eikon --help
+```bash
+eikon init
 ```
 
-### Programmatic Usage
+This creates `eikon.yaml`, `specs/`, `styles/`, `figures/`, and `data/` directories.
 
-To use the package programmatically in Python:
+### Write a figure spec
+
+Create `specs/example.yaml`:
+
+```yaml
+name: example
+title: "Example Figure"
+panels:
+  - name: A
+    plot_type: line
+    params:
+      color: blue
+layout:
+  rows: 1
+  cols: 1
+style: publication
+export:
+  formats: [pdf, svg]
+  dpi: 300
+```
+
+### Render from the CLI
+
+```bash
+eikon render specs/example.yaml --format pdf --format svg
+```
+
+### Render from Python
 
 ```python
 import eikon
+
+handle = eikon.render("example", formats=("pdf", "svg"))
+print(handle.export_paths)
+handle.close()
 ```
 
 ---
@@ -128,43 +120,66 @@ import eikon
 
 ### Environment Variables
 
-|Variable|Description|Default|Required|
-|---|---|---|---|
-|`VAR_1`|Description 1|None|Yes|
-|`VAR_2`|Description 2|`false`|No|
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `EIKON_PROJECT_ROOT` | Explicit project root directory | Auto-discovered | No |
 
 ### Configuration File
 
-Configuration options are specified in YAML files located in the `config/` directory.
-
-The canonical configuration schema is provided in [`config/default.yaml`](config/default.yaml).
+Project settings are specified in `eikon.yaml` at the project root:
 
 ```yaml
-var_1: value1
-var_2: value2
+paths:
+  output_dir: figures
+  styles_dir: styles
+  specs_dir: specs
+  data_dir: data
+
+export:
+  formats: [pdf]
+  dpi: 300
+  transparent: false
+  metadata:
+    author: "Author Name"
+
+style:
+  base_style: default
+  font_family: serif
+  font_size: 10.0
+  figure_size: [6.4, 4.8]
+
+registry_file: eikon-registry.yaml
 ```
 
 ---
 
 ## Documentation
 
-- [User Guide](https://esther-poniatowski.github.io/eikon/guide/)
-- [API Documentation](https://esther-poniatowski.github.io/eikon/api/)
+- [User Guide](docs/guide/) — Getting started, configuration, specifications, styles, layouts,
+  rendering, export, registry, CLI, and extensions.
+- [API Reference](docs/api/) — Complete reference for all public classes, functions, and protocols.
 
-> [!NOTE]
-> Documentation can also be browsed locally from the [`docs/`](docs/) directory.
+To build the docs locally:
+
+```bash
+pip install -e ".[docs]"
+cd docs && make html
+open _build/html/index.html
+```
+
+### Data transform registry
+
+Register reusable data-processing steps and reference them by name in YAML specs:
+
+- `eikon.ext.register_transform(name, fn)` — add a transform callable.
+- `eikon.ext.list_transforms()` — list registered transforms.
+- `eikon.ext.clear_transforms()` — clear all transforms (useful for tests or long-running sessions).
+
+---
 
 ## Support
 
 **Issues**: [GitHub Issues](https://github.com/esther-poniatowski/eikon/issues)
-
-**Email**: `{{ contact@example.com }}`
-
----
-
-## Contributing
-
-Please refer to the [contribution guidelines](CONTRIBUTING.md).
 
 ---
 
@@ -174,17 +189,16 @@ Please refer to the [contribution guidelines](CONTRIBUTING.md).
 
 **Author**: @esther-poniatowski
 
-**Contact**: `{{ contact@example.com }}`
-
 For academic use, please cite using the GitHub "Cite this repository" feature to
 generate a citation in various formats.
 
-Alternatively, refer to the [citation metadata](CITATION.cff).
-
 ### Third-Party Dependencies
 
-- **[Matplotlib](https://matplotlib.org/)** - Plotting library
-- **[NumPy](https://numpy.org/)** - Array operations
+- **[Matplotlib](https://matplotlib.org/)** — Plotting library
+- **[NumPy](https://numpy.org/)** — Array operations
+- **[PyYAML](https://pyyaml.org/)** — YAML parsing
+- **[Typer](https://typer.tiangolo.com/)** — CLI framework
+- **[Rich](https://rich.readthedocs.io/)** — Terminal formatting
 
 ---
 
