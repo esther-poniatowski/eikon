@@ -6,8 +6,15 @@ author = "Esther Poniatowski"
 
 extensions = [
     "myst_parser",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
 ]
+
+autodoc_member_order = "bysource"
+autodoc_typehints = "description"
+napoleon_google_style = False
+napoleon_numpy_style = True
 
 myst_enable_extensions = [
     "colon_fence",
