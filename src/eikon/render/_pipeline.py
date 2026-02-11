@@ -12,7 +12,7 @@ from typing import Any
 from eikon.config._loader import load_config
 from eikon.config._resolver import ResolvedPaths, resolve_paths
 from eikon.config._schema import ProjectConfig
-from eikon.exceptions import RenderError
+from eikon.exceptions import ConfigNotFoundError, RenderError
 from eikon.ext import discover_plugins
 from eikon.ext._hooks import HookName, fire_hook
 from eikon.layout._builder import build_layout
@@ -69,8 +69,26 @@ def render_figure(
     import eikon.contrib  # noqa: F401  — register built-in plot types lazily
     discover_plugins()
 
-    cfg = config or load_config()
-    paths = resolved_paths or resolve_paths(cfg.paths)
+    if config is not None:
+        cfg = config
+    else:
+        try:
+            cfg = load_config()
+        except ConfigNotFoundError:
+            cfg = ProjectConfig()
+    if resolved_paths is not None:
+        paths = resolved_paths
+    else:
+        try:
+            paths = resolve_paths(cfg.paths)
+        except ConfigNotFoundError:
+            paths = ResolvedPaths(
+                project_root=Path.cwd(),
+                output_dir=Path.cwd() / cfg.paths.output_dir,
+                styles_dir=Path.cwd() / cfg.paths.styles_dir,
+                specs_dir=Path.cwd() / cfg.paths.specs_dir,
+                data_dir=Path.cwd() / cfg.paths.data_dir,
+            )
 
     ctx = RenderContext(
         spec=spec,
@@ -173,13 +191,54 @@ def _post_process(ctx: RenderContext) -> None:
     fig = ctx.layout.figure
 
     if ctx.spec.title:
-        fig.suptitle(ctx.spec.title)
+        title_kw = ctx.spec.title_kwargs or {}
+        fig.suptitle(ctx.spec.title, **title_kw)
 
     # Apply panel labels
     for panel in ctx.spec.panels:
         if panel.label and panel.name in ctx.layout.axes:
             ax = ctx.layout.axes[panel.name]
             ax.set_title(panel.label)
+
+    # Hide spines per panel
+    for panel in ctx.spec.panels:
+        if panel.hide_spines and panel.name in ctx.layout.axes:
+            ax = ctx.layout.axes[panel.name]
+            for spine_name in panel.hide_spines:
+                ax.spines[spine_name].set_visible(False)
+            # Remove ticks on hidden spines
+            if "top" in panel.hide_spines or "bottom" in panel.hide_spines:
+                if "top" in panel.hide_spines:
+                    ax.tick_params(top=False)
+                if "bottom" in panel.hide_spines:
+                    ax.tick_params(bottom=False)
+            if "left" in panel.hide_spines or "right" in panel.hide_spines:
+                if "right" in panel.hide_spines:
+                    ax.tick_params(right=False)
+                if "left" in panel.hide_spines:
+                    ax.tick_params(left=False)
+
+    # Margin labels
+    if ctx.spec.margin_labels:
+        from eikon.render._margin_labels import draw_margin_labels
+
+        draw_margin_labels(fig, ctx.layout, ctx.spec.margin_labels)
+
+    # Shared legend: collect handles from the first panel that has them,
+    # remove per-panel legends, and place a single figure-level legend.
+    if ctx.spec.shared_legend is not None:
+        handles, labels = [], []
+        for panel in ctx.spec.panels:
+            if panel.name in ctx.layout.axes:
+                ax = ctx.layout.axes[panel.name]
+                h, l = ax.get_legend_handles_labels()
+                if h and not handles:
+                    handles, labels = h, l
+                legend = ax.get_legend()
+                if legend is not None:
+                    legend.remove()
+        if handles:
+            fig.legend(handles, labels, **ctx.spec.shared_legend)
 
 
 def _export_figure(ctx: RenderContext, figure: Any) -> dict[str, Path]:

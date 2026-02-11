@@ -13,6 +13,7 @@ from eikon.config._validation import validate_figure_spec
 from eikon.exceptions import ConfigError, SpecValidationError
 from eikon.spec._data import DataBinding
 from eikon.spec._figure import FigureSpec
+from eikon.spec._margin_labels import MarginLabelSpec, MarginLabelStyle, MarginTarget
 from eikon.spec._panel import PanelSpec
 
 __all__ = ["parse_figure_spec", "parse_figure_file"]
@@ -74,6 +75,12 @@ def parse_figure_spec(raw: dict[str, Any]) -> FigureSpec:
 
     panels = tuple(_build_panel(p) for p in raw.get("panels", []))
 
+    margin_labels = (
+        _build_margin_labels(raw["margin_labels"])
+        if "margin_labels" in raw
+        else None
+    )
+
     return FigureSpec(
         name=raw["name"],
         title=raw.get("title", ""),
@@ -83,6 +90,7 @@ def parse_figure_spec(raw: dict[str, Any]) -> FigureSpec:
         layout=raw.get("layout"),
         style=raw.get("style"),
         export=raw.get("export"),
+        margin_labels=margin_labels,
         metadata=dict(raw.get("metadata", {})),
     )
 
@@ -109,6 +117,83 @@ def _build_panel(raw: dict[str, Any]) -> PanelSpec:
         params=dict(raw.get("params", {})),
         label=raw.get("label", ""),
         auto_size=bool(raw.get("auto_size", False)),
+    )
+
+
+def _build_margin_labels(raw: dict[str, Any]) -> dict[str, MarginLabelSpec]:
+    """Construct margin label specs from a raw YAML mapping."""
+    result: dict[str, MarginLabelSpec] = {}
+    for edge, edge_raw in raw.items():
+        labels = _normalize_labels(edge_raw["labels"])
+
+        style = _build_margin_style(edge_raw.get("style", {}))
+
+        level_styles = None
+        if "level_styles" in edge_raw:
+            level_styles = tuple(
+                _build_margin_style(ls) for ls in edge_raw["level_styles"]
+            )
+
+        label_styles = None
+        if "label_styles" in edge_raw:
+            label_styles = {
+                text: _build_margin_style(s)
+                for text, s in edge_raw["label_styles"].items()
+            }
+
+        target = MarginTarget()
+        if "target" in edge_raw:
+            tgt = edge_raw["target"]
+            grid = None
+            if "grid" in tgt:
+                g = tgt["grid"]
+                grid = (int(g[0]), int(g[1]))
+            target = MarginTarget(
+                kind=tgt.get("kind", "layout"),
+                axes=tgt.get("axes"),
+                grid=grid,
+            )
+
+        cell_range = None
+        if "cell_range" in edge_raw:
+            cr = edge_raw["cell_range"]
+            cell_range = (int(cr[0]), int(cr[1]))
+
+        result[edge] = MarginLabelSpec(
+            labels=labels,
+            style=style,
+            level_styles=level_styles,
+            target=target,
+            strip_size=float(edge_raw.get("strip_size", 0.04)),
+            pad=float(edge_raw.get("pad", 6.0)),
+            gap=float(edge_raw.get("gap", 2.0)),
+            zorder=float(edge_raw.get("zorder", 2.1)),
+            label_styles=label_styles,
+            cell_range=cell_range,
+        )
+    return result
+
+
+def _normalize_labels(raw: Any) -> Any:
+    """Normalize YAML-loaded labels: convert lists to tuples recursively."""
+    if isinstance(raw, list):
+        return tuple(raw)
+    if isinstance(raw, dict):
+        return {k: _normalize_labels(v) if v is not None else None for k, v in raw.items()}
+    return raw
+
+
+def _build_margin_style(raw: dict[str, Any]) -> MarginLabelStyle:
+    """Construct a MarginLabelStyle from a raw dictionary."""
+    rotation = raw.get("rotation")
+    if rotation is not None:
+        rotation = float(rotation)
+    return MarginLabelStyle(
+        bg_color=raw.get("bg_color"),
+        text_color=raw.get("text_color", "black"),
+        fontsize=float(raw.get("fontsize", 8.0)),
+        fontweight=raw.get("fontweight", "normal"),
+        rotation=rotation,
     )
 
 

@@ -46,7 +46,15 @@ from eikon.export import ExportSpec, batch_export  # noqa: E402
 from eikon.layout import BuiltLayout, LayoutSpec, build_layout  # noqa: E402
 from eikon.registry import Registry  # noqa: E402
 from eikon.render import FigureHandle, render_figure  # noqa: E402
-from eikon.spec import DataBinding, FigureSpec, PanelSpec, parse_figure_spec  # noqa: E402
+from eikon.spec import (  # noqa: E402
+    DataBinding,
+    FigureSpec,
+    MarginLabelSpec,
+    MarginLabelStyle,
+    MarginTarget,
+    PanelSpec,
+    parse_figure_spec,
+)
 from eikon.style import StyleSheet, load_style, style_context  # noqa: E402
 
 __all__ = [
@@ -58,9 +66,12 @@ __all__ = [
     "load_config",
     "resolve_paths",
     # Specifications
-    "FigureSpec",
-    "PanelSpec",
     "DataBinding",
+    "FigureSpec",
+    "MarginLabelSpec",
+    "MarginLabelStyle",
+    "MarginTarget",
+    "PanelSpec",
     "parse_figure_spec",
     # Style
     "StyleSheet",
@@ -127,8 +138,28 @@ def render(
     """
     from pathlib import Path
 
-    cfg = config or load_config()
-    paths = resolved_paths or resolve_paths(cfg.paths)
+    if config is not None:
+        cfg = config
+    else:
+        try:
+            cfg = load_config()
+        except Exception:
+            cfg = ProjectConfig()
+    if resolved_paths is not None:
+        paths = resolved_paths
+    else:
+        try:
+            paths = resolve_paths(cfg.paths)
+        except Exception:
+            from eikon.config._resolver import ResolvedPaths
+
+            paths = ResolvedPaths(
+                project_root=Path.cwd(),
+                output_dir=Path.cwd() / cfg.paths.output_dir,
+                styles_dir=Path.cwd() / cfg.paths.styles_dir,
+                specs_dir=Path.cwd() / cfg.paths.specs_dir,
+                data_dir=Path.cwd() / cfg.paths.data_dir,
+            )
 
     if isinstance(name_or_spec, str):
         from eikon.spec import parse_figure_file

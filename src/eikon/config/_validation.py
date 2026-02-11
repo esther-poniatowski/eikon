@@ -206,4 +206,67 @@ def validate_figure_spec(raw: dict[str, Any]) -> list[str]:
                     if not isinstance(val, int) or val < 1:
                         errors.append(f"'layout.{dim}' must be a positive integer.")
 
+    # --- margin_labels ---
+    if "margin_labels" in raw:
+        ml = raw["margin_labels"]
+        if not isinstance(ml, dict):
+            errors.append("'margin_labels' must be a mapping.")
+        else:
+            valid_edges = {"top", "bottom", "left", "right"}
+            for edge_key, edge_val in ml.items():
+                if edge_key not in valid_edges:
+                    errors.append(
+                        f"'margin_labels' key {edge_key!r} is invalid; "
+                        f"expected one of {sorted(valid_edges)}."
+                    )
+                if not isinstance(edge_val, dict):
+                    errors.append(f"margin_labels[{edge_key!r}] must be a mapping.")
+                    continue
+                if "labels" not in edge_val:
+                    errors.append(f"margin_labels[{edge_key!r}]: 'labels' is required.")
+                else:
+                    labels = edge_val["labels"]
+                    if not isinstance(labels, (list, dict)):
+                        errors.append(
+                            f"margin_labels[{edge_key!r}].labels must be a list or mapping."
+                        )
+                if "target" in edge_val:
+                    tgt = edge_val["target"]
+                    if isinstance(tgt, dict):
+                        kind = tgt.get("kind", "layout")
+                        if kind == "virtual":
+                            if "axes" not in tgt:
+                                errors.append(
+                                    f"margin_labels[{edge_key!r}].target: "
+                                    "'axes' is required for virtual targets."
+                                )
+                            if "grid" not in tgt:
+                                errors.append(
+                                    f"margin_labels[{edge_key!r}].target: "
+                                    "'grid' is required for virtual targets."
+                                )
+                if "label_styles" in edge_val:
+                    ls = edge_val["label_styles"]
+                    if not isinstance(ls, dict):
+                        errors.append(
+                            f"margin_labels[{edge_key!r}].label_styles must be a mapping."
+                        )
+                if "cell_range" in edge_val:
+                    cr = edge_val["cell_range"]
+                    if not isinstance(cr, (list, tuple)) or len(cr) != 2:
+                        errors.append(
+                            f"margin_labels[{edge_key!r}].cell_range must be "
+                            "a list of two integers [start, end]."
+                        )
+                    elif not all(isinstance(v, int) for v in cr):
+                        errors.append(
+                            f"margin_labels[{edge_key!r}].cell_range values "
+                            "must be integers."
+                        )
+                    elif cr[0] < 0 or cr[1] <= cr[0]:
+                        errors.append(
+                            f"margin_labels[{edge_key!r}].cell_range must "
+                            "satisfy 0 <= start < end."
+                        )
+
     return errors

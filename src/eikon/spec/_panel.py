@@ -38,6 +38,11 @@ class PanelSpec:
     auto_size : bool
         When ``True``, defer figure size to the constrained-layout solver
         rather than using the explicit ``figure_size``.
+    hide_spines : tuple[str, ...] | None
+        Spine names to hide on this panel's axes.  Common values are
+        ``("top", "right")`` for a cleaner look.  Valid names:
+        ``"top"``, ``"bottom"``, ``"left"``, ``"right"``.
+        ``None`` (default) keeps all spines visible.
     """
 
     name: str
@@ -49,3 +54,4 @@ class PanelSpec:
     params: dict[str, Any] = field(default_factory=dict)
     label: str = ""
     auto_size: bool = False
+    hide_spines: tuple[str, ...] | None = None

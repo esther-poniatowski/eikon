@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 from eikon._types import StyleRef, Tag
 
 if TYPE_CHECKING:
+    from eikon.spec._margin_labels import MarginLabelSpec
     from eikon.spec._panel import PanelSpec
 
 __all__ = ["FigureSpec"]
@@ -40,6 +41,19 @@ class FigureSpec:
         Figure-level style override.
     export : dict[str, Any] | None
         Per-figure export settings override.
+    title_kwargs : dict[str, Any] | None
+        Extra keyword arguments forwarded to
+        :meth:`matplotlib.figure.Figure.suptitle` (e.g. ``y``,
+        ``fontsize``, ``fontweight``).  ``None`` uses matplotlib defaults.
+    shared_legend : dict[str, Any] | None
+        If set, collect legend handles from the first panel that has them
+        and render a single figure-level legend.  Accepted keys are any
+        keyword arguments to :meth:`matplotlib.figure.Figure.legend`
+        (e.g. ``loc``, ``ncol``, ``fontsize``, ``frameon``).  Pass an
+        empty dict ``{}`` for default placement.
+    margin_labels : dict[str, MarginLabelSpec] | None
+        Edge labels for annotating rows or columns.  Keys are edge
+        names (``"top"``, ``"bottom"``, ``"left"``, ``"right"``).
     metadata : dict[str, str]
         Arbitrary metadata fields (e.g. author, project).
     """
@@ -52,4 +66,7 @@ class FigureSpec:
     layout: dict[str, Any] | None = None
     style: StyleRef | None = None
     export: dict[str, Any] | None = None
+    title_kwargs: dict[str, Any] | None = None
+    shared_legend: dict[str, Any] | None = None
+    margin_labels: dict[str, MarginLabelSpec] | None = None
     metadata: dict[str, str] = field(default_factory=dict)

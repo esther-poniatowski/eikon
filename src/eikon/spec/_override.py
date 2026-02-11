@@ -43,6 +43,8 @@ def merge_spec_override(
             kwargs["layout"] = {**base.layout, **value}
         elif key == "export" and isinstance(value, dict) and base.export is not None:
             kwargs["export"] = {**base.export, **value}
+        elif key == "margin_labels" and isinstance(value, dict) and base.margin_labels is not None:
+            kwargs["margin_labels"] = {**base.margin_labels, **value}
         elif key == "tags" and isinstance(value, (list, tuple)):
             kwargs["tags"] = tuple(value)
         elif key == "panels":

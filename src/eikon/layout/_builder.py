@@ -37,6 +37,7 @@ class BuiltLayout:
 
     figure: Figure
     axes: dict[str, Any]  # dict[str, Axes] — Any for frozen dataclass compat
+    grid_spec: Any  # GridSpec — Any for frozen dataclass compat
 
 
 def build_layout(
@@ -90,4 +91,4 @@ def build_layout(
         ax = fig.add_subplot(subplot_spec)
         axes[placement.panel_name] = ax
 
-    return BuiltLayout(figure=fig, axes=axes)
+    return BuiltLayout(figure=fig, axes=axes, grid_spec=gs)
