@@ -74,6 +74,12 @@ class DataTransform(Protocol):
 
 Protocol for data transformations applied before drawing.
 
+## Margin labels
+
+The `render_figure` pipeline automatically draws margin labels when `FigureSpec.margin_labels` is set. Labels are rendered after all panels are drawn and the layout is finalized.
+
+The internal entry point is `draw_margin_labels`, which resolves label hierarchies into positioned text and optional background patches. See the {doc}`Specifications guide </guide/specifications>` for the declarative YAML syntax.
+
 ## Functions
 
 ### render_figure
