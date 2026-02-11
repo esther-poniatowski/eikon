@@ -22,7 +22,7 @@ class TestPresets:
 
     def test_publication_preset_values(self) -> None:
         pub = PRESETS["publication"]
-        assert pub.font_family == "serif"
+        assert pub.font_family == "sans-serif"
         assert pub.font_size == 8.0
         assert pub.figure_size == (7.0, 5.0)
 

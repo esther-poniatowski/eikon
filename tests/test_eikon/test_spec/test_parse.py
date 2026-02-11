@@ -63,6 +63,91 @@ class TestParseFigureSpec:
         })
         assert spec.panels[0].auto_size is True
 
+    def test_title_kwargs_parsed(self):
+        spec = parse_figure_spec({
+            "name": "fig",
+            "title_kwargs": {"y": 0.95, "fontsize": 14},
+        })
+        assert spec.title_kwargs == {"y": 0.95, "fontsize": 14}
+
+    def test_title_kwargs_default_none(self):
+        spec = parse_figure_spec({"name": "fig"})
+        assert spec.title_kwargs is None
+
+    def test_shared_legend_parsed(self):
+        spec = parse_figure_spec({
+            "name": "fig",
+            "shared_legend": {"loc": "upper right", "ncol": 2},
+        })
+        assert spec.shared_legend == {"loc": "upper right", "ncol": 2}
+
+    def test_shared_legend_empty_dict(self):
+        spec = parse_figure_spec({
+            "name": "fig",
+            "shared_legend": {},
+        })
+        assert spec.shared_legend == {}
+
+    def test_shared_legend_default_none(self):
+        spec = parse_figure_spec({"name": "fig"})
+        assert spec.shared_legend is None
+
+    def test_hide_spines_parsed(self):
+        spec = parse_figure_spec({
+            "name": "fig",
+            "panels": [{
+                "name": "A",
+                "plot_type": "line",
+                "hide_spines": ["top", "right"],
+            }],
+        })
+        assert spec.panels[0].hide_spines == ("top", "right")
+
+    def test_hide_spines_default_none(self):
+        spec = parse_figure_spec({
+            "name": "fig",
+            "panels": [{"name": "A", "plot_type": "line"}],
+        })
+        assert spec.panels[0].hide_spines is None
+
+
+class TestParseLayoutSpec:
+    def test_empty_dict_defaults(self):
+        from eikon.spec._parse import parse_layout_spec
+
+        layout = parse_layout_spec({})
+        assert layout.rows == 1
+        assert layout.cols == 1
+
+    def test_rows_cols(self):
+        from eikon.spec._parse import parse_layout_spec
+
+        layout = parse_layout_spec({"rows": 2, "cols": 3})
+        assert layout.rows == 2
+        assert layout.cols == 3
+
+    def test_ratios_and_spacing(self):
+        from eikon.spec._parse import parse_layout_spec
+
+        layout = parse_layout_spec({
+            "rows": 2,
+            "cols": 2,
+            "width_ratios": [1.0, 2.0],
+            "height_ratios": [1.0, 0.5],
+            "wspace": 0.3,
+            "hspace": 0.4,
+        })
+        assert layout.width_ratios == (1.0, 2.0)
+        assert layout.height_ratios == (1.0, 0.5)
+        assert layout.wspace == 0.3
+        assert layout.hspace == 0.4
+
+    def test_constrained_layout(self):
+        from eikon.spec._parse import parse_layout_spec
+
+        layout = parse_layout_spec({"constrained_layout": False})
+        assert layout.constrained_layout is False
+
 
 class TestParseFigureFile:
     def test_loads_yaml(self, tmp_path: Path, sample_spec_dict: dict):

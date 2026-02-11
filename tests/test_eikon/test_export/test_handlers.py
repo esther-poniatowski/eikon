@@ -8,7 +8,12 @@ import pytest
 
 from eikon._types import ExportFormat
 from eikon.export._config import ResolvedExportConfig
-from eikon.export._handlers import export_figure, get_handler
+from eikon.export._handlers import (
+    _HANDLER_REGISTRY,
+    export_figure,
+    get_handler,
+    register_format_handler,
+)
 
 matplotlib.use("Agg")
 
@@ -88,3 +93,37 @@ class TestExportFigure:
         path = tmp_path / "sub" / "dir" / "test.pdf"
         export_figure(sample_figure, path, ExportFormat.PDF, export_config)
         assert path.exists()
+
+
+class TestRegisterFormatHandler:
+    """Custom handler registration."""
+
+    def teardown_method(self) -> None:
+        _HANDLER_REGISTRY.clear()
+        plt.close("all")
+
+    def test_register_overrides_builtin(
+        self, tmp_path: Path, sample_figure: plt.Figure, export_config: ResolvedExportConfig
+    ) -> None:
+        calls: list[str] = []
+
+        def custom_pdf(figure, path, config):  # noqa: ANN001
+            calls.append("custom")
+            figure.savefig(path, format="pdf")
+
+        register_format_handler(ExportFormat.PDF, custom_pdf)
+        path = tmp_path / "custom.pdf"
+        export_figure(sample_figure, path, ExportFormat.PDF, export_config)
+        assert calls == ["custom"]
+        assert path.exists()
+
+    def test_custom_handler_retrieved(self) -> None:
+        def my_handler(fig, path, cfg):  # noqa: ANN001
+            pass
+
+        register_format_handler(ExportFormat.PNG, my_handler)
+        assert get_handler(ExportFormat.PNG) is my_handler
+
+    def test_builtin_fallback_when_no_custom(self) -> None:
+        handler = get_handler(ExportFormat.SVG)
+        assert callable(handler)

@@ -76,6 +76,16 @@ class TestCliInit:
         assert "spec_version: 1" in content
         assert "plot_type: line" in content
 
+    def test_generates_multi_panel_example(self, tmp_path: Path):
+        runner.invoke(app, ["init", str(tmp_path)])
+        example = tmp_path / "specs" / "multi-panel-example.yaml"
+        assert example.is_file()
+        content = example.read_text(encoding="utf-8")
+        assert "rows: 2" in content
+        assert "cols: 2" in content
+        assert "shared_legend:" in content
+        assert "hide_spines:" in content
+
     def test_config_version_in_template(self, tmp_path: Path):
         runner.invoke(app, ["init", str(tmp_path)])
         content = (tmp_path / "eikon.yaml").read_text(encoding="utf-8")
@@ -243,6 +253,51 @@ class TestCliRegistry:
             app, ["registry", "add", "fig1", "--on-conflict", "fail"]
         )
         assert result.exit_code == 1
+
+
+class TestCliRenderRegistry:
+    """CLI render-registry command renders a figure by registry name."""
+
+    @pytest.fixture(autouse=True)
+    def _clean_state(self) -> None:
+        _clear_registry()
+        clear_hooks()
+        register_plot_type("noop", _noop_plot)
+        yield  # type: ignore[misc]
+        plt.close("all")
+
+    def test_render_by_name(self, tmp_project: Path, monkeypatch) -> None:
+        monkeypatch.chdir(tmp_project)
+        spec = tmp_project / "specs" / "myfig.yaml"
+        spec.write_text(
+            "name: myfig\npanels:\n  - name: A\n    plot_type: noop\n",
+            encoding="utf-8",
+        )
+        # Register the figure with a spec_path
+        runner.invoke(app, ["registry", "add", "myfig", "--spec-path", str(spec)])
+        result = runner.invoke(app, ["render-registry", "myfig"])
+        assert result.exit_code == 0
+        assert "Rendered" in result.output
+
+    def test_render_by_name_fallback_to_specs_dir(self, tmp_project: Path, monkeypatch) -> None:
+        monkeypatch.chdir(tmp_project)
+        spec = tmp_project / "specs" / "fallback.yaml"
+        spec.write_text(
+            "name: fallback\npanels:\n  - name: A\n    plot_type: noop\n",
+            encoding="utf-8",
+        )
+        # Register without spec_path — should fall back to specs_dir
+        runner.invoke(app, ["registry", "add", "fallback"])
+        result = runner.invoke(app, ["render-registry", "fallback"])
+        assert result.exit_code == 0
+        assert "Rendered" in result.output
+
+    def test_render_by_name_missing_spec(self, tmp_project: Path, monkeypatch) -> None:
+        monkeypatch.chdir(tmp_project)
+        runner.invoke(app, ["registry", "add", "ghost"])
+        result = runner.invoke(app, ["render-registry", "ghost"])
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower()
 
 
 def _write_spec(path: Path, name: str, tags: list[str] | None = None, group: str = "") -> Path:

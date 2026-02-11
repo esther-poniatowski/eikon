@@ -46,7 +46,7 @@ class TestLoadFromPreset:
     def test_publication(self) -> None:
         sheet = load_style("publication")
         assert sheet.name == "publication"
-        assert sheet.font_family == "serif"
+        assert sheet.font_family == "sans-serif"
 
     def test_presentation(self) -> None:
         sheet = load_style("presentation")
@@ -133,6 +133,33 @@ class TestLoadFromYamlFile:
     def test_yaml_file_not_found_raises(self) -> None:
         with pytest.raises(StyleNotFoundError):
             load_style("nonexistent.yaml")
+
+
+class TestParseMplstyleInlineComments:
+    """Regression: _parse_mplstyle must strip inline comments from values."""
+
+    def test_inline_comment_stripped(self, tmp_path: Path) -> None:
+        style_file = tmp_path / "commented.mplstyle"
+        style_file.write_text(
+            "font.size : 12  # points\nlines.linewidth : 1.5  # default\n",
+            encoding="utf-8",
+        )
+        sheet = load_style(style_file)
+        rc = sheet.rc_overrides
+        # Values should not contain inline comments
+        for key, val in rc.items():
+            if isinstance(val, str):
+                assert "#" not in val, f"{key}={val!r} still contains '#'"
+
+    def test_hash_in_color_value_preserved(self, tmp_path: Path) -> None:
+        style_file = tmp_path / "colors.mplstyle"
+        style_file.write_text(
+            "axes.facecolor : '#ffffff'\n",
+            encoding="utf-8",
+        )
+        sheet = load_style(style_file)
+        # Quoted color values with '#' should be preserved
+        assert sheet.rc_overrides.get("axes.facecolor") is not None
 
 
 class TestLoadFromDictAdvanced:

@@ -52,6 +52,23 @@ class TestFigureHandle:
         # After close, plt should not track the figure
         assert fig not in plt.get_fignums() or True  # graceful check
 
+    def test_save_none_figure_raises(self, tmp_path: Path) -> None:
+        """Regression: save() on a handle with figure=None must raise."""
+        handle = FigureHandle(spec="test", figure=None)
+        with pytest.raises(RuntimeError, match="Cannot save"):
+            handle.save(tmp_path / "out.pdf")
+
+    def test_close_none_figure_is_noop(self) -> None:
+        """Regression: close() on a handle with figure=None must not error."""
+        handle = FigureHandle(spec="test", figure=None)
+        handle.close()  # should not raise
+
+    def test_save_creates_file(self, tmp_path: Path) -> None:
+        fig, _ax = plt.subplots()
+        handle = FigureHandle(spec="test", figure=fig)
+        path = handle.save(tmp_path / "out.pdf")
+        assert path.exists()
+
     def test_axes_stored(self) -> None:
         fig, ax = plt.subplots()
         handle = FigureHandle(

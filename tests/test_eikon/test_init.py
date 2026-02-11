@@ -68,6 +68,16 @@ class TestRenderConvenience:
         handle.close()
 
 
+class TestPublicAPI:
+    """Verify public API exports."""
+
+    def test_resolved_paths_exported(self) -> None:
+        import eikon
+
+        assert "ResolvedPaths" in eikon.__all__
+        assert hasattr(eikon, "ResolvedPaths")
+
+
 class TestLoadRegistry:
     """eikon.load_registry() convenience function."""
 

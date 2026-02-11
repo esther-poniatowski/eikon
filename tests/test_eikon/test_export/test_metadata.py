@@ -41,6 +41,15 @@ class TestInjectPdfMetadata:
         inject_pdf_metadata(pdf_path, {"Author": "Test Author"})
         assert pdf_path.exists()
 
+    def test_does_not_destroy_pdf(self, tmp_path: Path, sample_figure: plt.Figure) -> None:
+        """Regression: inject_pdf_metadata must not truncate the PDF."""
+        pdf_path = tmp_path / "fig.pdf"
+        sample_figure.savefig(pdf_path)
+        original_size = pdf_path.stat().st_size
+        inject_pdf_metadata(pdf_path, {"Author": "Test Author"})
+        # The file should be at least as large as the original
+        assert pdf_path.stat().st_size >= original_size
+
 
 class TestInjectPngMetadata:
     """inject_png_metadata adds text chunks to PNG files."""

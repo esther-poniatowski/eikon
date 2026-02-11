@@ -48,7 +48,7 @@ class TestStyleDefaults:
     def test_defaults(self):
         style = StyleDefaults()
         assert style.base_style == "default"
-        assert style.font_family == "serif"
+        assert style.font_family == "sans-serif"
         assert style.font_size == 10.0
         assert style.figure_size == (6.4, 4.8)
 

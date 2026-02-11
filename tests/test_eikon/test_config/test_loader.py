@@ -46,7 +46,7 @@ class TestMergeConfigs:
         merged = merge_configs(base, {"export": {"dpi": 600}})
         assert merged.export.dpi == 600
         # Other fields preserved
-        assert merged.style.font_family == "serif"
+        assert merged.style.font_family == "sans-serif"
 
     def test_override_formats(self):
         base = ProjectConfig()

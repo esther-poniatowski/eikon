@@ -86,6 +86,35 @@ class TestValidateLayout:
             validate_layout(placements, layout)
 
 
+class TestPlacementCellsZero:
+    """Regression: _placement_cells must handle zero-valued slice attributes."""
+
+    def test_zero_start_row(self) -> None:
+        layout = LayoutSpec(rows=2, cols=1)
+        placements = (_placement("A", (0, 1), (0, 1)),)
+        errors = validate_layout(placements, layout)
+        assert errors == []
+
+    def test_zero_start_col(self) -> None:
+        layout = LayoutSpec(rows=1, cols=2)
+        placements = (_placement("A", (0, 1), (0, 1)),)
+        errors = validate_layout(placements, layout)
+        assert errors == []
+
+    def test_zero_stop_no_false_expansion(self) -> None:
+        """slice(0, 0) should produce an empty range, not expand to (0, 1)."""
+        layout = LayoutSpec(rows=2, cols=2)
+        p = PanelPlacement(
+            panel_name="empty",
+            row_slice=slice(0, 0),
+            col_slice=slice(0, 1),
+        )
+        from eikon.layout._constraints import _placement_cells
+
+        cells = _placement_cells(p)
+        assert cells == []
+
+
 class TestValidateLayoutStrict:
     """Strict validation raises LayoutError."""
 
