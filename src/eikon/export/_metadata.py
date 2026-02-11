@@ -11,7 +11,6 @@ PNG metadata uses matplotlib's built-in text chunk support.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 __all__ = ["inject_pdf_metadata", "inject_png_metadata"]
 
@@ -19,8 +18,9 @@ __all__ = ["inject_pdf_metadata", "inject_png_metadata"]
 def inject_pdf_metadata(path: Path, metadata: dict[str, str]) -> None:
     """Inject metadata into an existing PDF file.
 
-    Uses matplotlib's PdfPages as a lightweight re-write.  If the file
-    does not exist or metadata is empty, this is a no-op.
+    Uses ``pypdf`` to read, annotate, and re-write the PDF.  If ``pypdf``
+    is not installed, emits a warning and returns without modifying the
+    file.  If the file does not exist or metadata is empty, this is a no-op.
 
     Parameters
     ----------
@@ -32,14 +32,25 @@ def inject_pdf_metadata(path: Path, metadata: dict[str, str]) -> None:
     if not path.exists() or not metadata:
         return
 
-    from matplotlib.backends.backend_pdf import PdfPages
+    try:
+        from pypdf import PdfReader, PdfWriter  # type: ignore[import-not-found]
+    except ImportError:
+        import warnings
 
-    info: dict[str, Any] = {}
-    for key, value in metadata.items():
-        info[f"/{key}"] = value
+        warnings.warn(
+            "pypdf is required for post-hoc PDF metadata injection. "
+            "Install it with: pip install pypdf",
+            UserWarning,
+            stacklevel=2,
+        )
+        return
 
-    with PdfPages(path) as pdf:
-        pdf.infodict().update(info)
+    reader = PdfReader(path)
+    writer = PdfWriter()
+    writer.append_pages_from_reader(reader)
+    writer.add_metadata({f"/{key}": value for key, value in metadata.items()})
+    with open(path, "wb") as f:
+        writer.write(f)
 
 
 def inject_png_metadata(path: Path, metadata: dict[str, str]) -> None:

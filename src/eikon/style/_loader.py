@@ -162,6 +162,9 @@ def _parse_mplstyle(path: Path) -> dict[str, Any]:
         value = value.strip()
         if value.startswith("#"):
             continue
+        # Strip inline comments (not inside quoted strings)
+        if "#" in value and not (value.startswith(("'", '"')) and value.endswith(("'", '"'))):
+            value = value[:value.index("#")].strip()
         try:
             validate = getattr(mpl.rcParams, "validate", {})
             params[key] = validate[key](value)

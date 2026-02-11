@@ -11,12 +11,13 @@ import yaml
 
 from eikon.config._validation import validate_figure_spec
 from eikon.exceptions import ConfigError, SpecValidationError
+from eikon.layout._grid import LayoutSpec
 from eikon.spec._data import DataBinding
 from eikon.spec._figure import FigureSpec
 from eikon.spec._margin_labels import MarginLabelSpec, MarginLabelStyle, MarginTarget
 from eikon.spec._panel import PanelSpec
 
-__all__ = ["parse_figure_spec", "parse_figure_file"]
+__all__ = ["parse_figure_file", "parse_figure_spec", "parse_layout_spec"]
 
 
 def parse_figure_file(path: Path) -> FigureSpec:
@@ -81,6 +82,9 @@ def parse_figure_spec(raw: dict[str, Any]) -> FigureSpec:
         else None
     )
 
+    title_kwargs = dict(raw["title_kwargs"]) if "title_kwargs" in raw else None
+    shared_legend = dict(raw["shared_legend"]) if "shared_legend" in raw else None
+
     return FigureSpec(
         name=raw["name"],
         title=raw.get("title", ""),
@@ -90,6 +94,8 @@ def parse_figure_spec(raw: dict[str, Any]) -> FigureSpec:
         layout=raw.get("layout"),
         style=raw.get("style"),
         export=raw.get("export"),
+        title_kwargs=title_kwargs,
+        shared_legend=shared_legend,
         margin_labels=margin_labels,
         metadata=dict(raw.get("metadata", {})),
     )
@@ -107,6 +113,9 @@ def _build_panel(raw: dict[str, Any]) -> PanelSpec:
     if isinstance(col, list):
         col = tuple(col)
 
+    hide_spines_raw = raw.get("hide_spines")
+    hide_spines = tuple(hide_spines_raw) if hide_spines_raw is not None else None
+
     return PanelSpec(
         name=raw["name"],
         plot_type=raw["plot_type"],
@@ -117,6 +126,7 @@ def _build_panel(raw: dict[str, Any]) -> PanelSpec:
         params=dict(raw.get("params", {})),
         label=raw.get("label", ""),
         auto_size=bool(raw.get("auto_size", False)),
+        hide_spines=hide_spines,
     )
 
 
@@ -207,3 +217,35 @@ def _build_data_binding(raw: dict[str, Any]) -> DataBinding:
         transforms=tuple(raw.get("transforms", [])),
         params=dict(raw.get("params", {})),
     )
+
+
+def parse_layout_spec(raw: dict[str, Any]) -> LayoutSpec:
+    """Convert a raw layout dictionary to a :class:`LayoutSpec`.
+
+    Parameters
+    ----------
+    raw : dict
+        Dictionary representation of a layout specification, typically
+        from the ``layout`` key of a figure YAML file.
+
+    Returns
+    -------
+    LayoutSpec
+        Parsed layout specification.
+    """
+    kwargs: dict[str, Any] = {}
+    if "rows" in raw:
+        kwargs["rows"] = int(raw["rows"])
+    if "cols" in raw:
+        kwargs["cols"] = int(raw["cols"])
+    if "width_ratios" in raw:
+        kwargs["width_ratios"] = tuple(float(r) for r in raw["width_ratios"])
+    if "height_ratios" in raw:
+        kwargs["height_ratios"] = tuple(float(r) for r in raw["height_ratios"])
+    if "wspace" in raw:
+        kwargs["wspace"] = float(raw["wspace"])
+    if "hspace" in raw:
+        kwargs["hspace"] = float(raw["hspace"])
+    if "constrained_layout" in raw:
+        kwargs["constrained_layout"] = bool(raw["constrained_layout"])
+    return LayoutSpec(**kwargs)

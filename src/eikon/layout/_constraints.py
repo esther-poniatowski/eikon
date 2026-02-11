@@ -98,10 +98,10 @@ def _placement_cells(
     placement: PanelPlacement,
 ) -> list[tuple[int, int]]:
     """Enumerate all (row, col) cells occupied by a placement."""
-    row_start = placement.row_slice.start or 0
-    row_stop = placement.row_slice.stop or (row_start + 1)
-    col_start = placement.col_slice.start or 0
-    col_stop = placement.col_slice.stop or (col_start + 1)
+    row_start = placement.row_slice.start if placement.row_slice.start is not None else 0
+    row_stop = placement.row_slice.stop if placement.row_slice.stop is not None else (row_start + 1)
+    col_start = placement.col_slice.start if placement.col_slice.start is not None else 0
+    col_stop = placement.col_slice.stop if placement.col_slice.stop is not None else (col_start + 1)
     return [
         (r, c)
         for r in range(row_start, row_stop)

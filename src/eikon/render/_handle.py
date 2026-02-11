@@ -52,7 +52,7 @@ class FigureHandle:
         """
         return self.export_paths.get(fmt.lower())
 
-    def save(
+    def save(  # noqa: PLR0913
         self,
         path: str | Path,
         *,
@@ -83,6 +83,9 @@ class FigureHandle:
         Path
             The resolved output path.
         """
+        if self.figure is None:
+            msg = "Cannot save: no figure was rendered."
+            raise RuntimeError(msg)
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         self.figure.savefig(path, dpi=dpi, bbox_inches=bbox_inches, **kwargs)
@@ -92,6 +95,8 @@ class FigureHandle:
 
     def close(self) -> None:
         """Close the matplotlib Figure to free memory."""
+        if self.figure is None:
+            return
         import matplotlib.pyplot as plt
 
         plt.close(self.figure)

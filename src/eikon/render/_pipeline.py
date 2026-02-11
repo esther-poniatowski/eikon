@@ -17,12 +17,12 @@ from eikon.ext import discover_plugins
 from eikon.ext._hooks import HookName, fire_hook
 from eikon.layout._builder import build_layout
 from eikon.layout._constraints import validate_layout_strict
-from eikon.layout._grid import LayoutSpec
 from eikon.layout._placement import resolve_placements
 from eikon.render._context import RenderContext
-from eikon.render._drawing import draw_all_panels
+from eikon.render._drawing import draw_panel
 from eikon.render._handle import FigureHandle
 from eikon.spec._figure import FigureSpec
+from eikon.spec._parse import parse_layout_spec
 from eikon.style._composer import resolve_style_chain
 from eikon.style._loader import load_style
 from eikon.style._presets import PRESETS
@@ -143,17 +143,41 @@ def _resolve_style(ctx: RenderContext) -> None:
         ctx.style = StyleSheet(name="default")
         return
 
-    sheet = load_style(style_ref, search_dirs=(ctx.paths.styles_dir,))
+    search_dirs = (ctx.paths.styles_dir,)
+    sheet = load_style(style_ref, search_dirs=search_dirs)
     if sheet.extends:
-        registry = dict(PRESETS)
+        registry = _build_style_registry(search_dirs)
         sheet = resolve_style_chain(sheet, registry)
     ctx.style = sheet
+
+
+def _build_style_registry(
+    search_dirs: tuple[Path, ...],
+) -> dict[str, StyleSheet]:
+    """Build a style registry from presets and user style files.
+
+    Scans the given directories for ``.yaml``, ``.yml``, and ``.mplstyle``
+    files so that user styles can ``extends`` other user styles, not only
+    built-in presets.
+    """
+    registry: dict[str, StyleSheet] = dict(PRESETS)
+    for directory in search_dirs:
+        if not directory.is_dir():
+            continue
+        for path in directory.iterdir():
+            if path.suffix in (".yaml", ".yml", ".mplstyle"):
+                try:
+                    user_sheet = load_style(path)
+                    registry[user_sheet.name] = user_sheet
+                except Exception:  # noqa: BLE001
+                    continue
+    return registry
 
 
 def _build_layout(ctx: RenderContext) -> None:
     """Build the matplotlib Figure and Axes from the spec's layout."""
     layout_dict = ctx.spec.layout or {}
-    layout = _parse_layout_spec(layout_dict)
+    layout = parse_layout_spec(layout_dict)
 
     placements = resolve_placements(ctx.spec.panels, layout)
     validate_layout_strict(placements, layout)
@@ -174,15 +198,21 @@ def _build_layout(ctx: RenderContext) -> None:
 
 
 def _draw_panels(ctx: RenderContext) -> None:
-    """Draw all panels into their axes."""
+    """Draw all panels into their axes, applying per-panel styles."""
     assert ctx.layout is not None
     assert ctx.style is not None
     with style_context(ctx.style):
-        draw_all_panels(
-            ctx.layout.axes,
-            ctx.spec.panels,
-            data_dir=ctx.paths.data_dir,
-        )
+        for panel in ctx.spec.panels:
+            if panel.name not in ctx.layout.axes:
+                continue
+            ax = ctx.layout.axes[panel.name]
+            if panel.style is not None:
+                search_dirs = (ctx.paths.styles_dir,)
+                panel_sheet = load_style(panel.style, search_dirs=search_dirs)
+                with style_context(panel_sheet):
+                    draw_panel(ax, panel, data_dir=ctx.paths.data_dir)
+            else:
+                draw_panel(ax, panel, data_dir=ctx.paths.data_dir)
 
 
 def _post_process(ctx: RenderContext) -> None:
@@ -227,13 +257,14 @@ def _post_process(ctx: RenderContext) -> None:
     # Shared legend: collect handles from the first panel that has them,
     # remove per-panel legends, and place a single figure-level legend.
     if ctx.spec.shared_legend is not None:
-        handles, labels = [], []
+        handles: list[Any] = []
+        labels: list[str] = []
         for panel in ctx.spec.panels:
             if panel.name in ctx.layout.axes:
                 ax = ctx.layout.axes[panel.name]
-                h, l = ax.get_legend_handles_labels()
+                h, lab = ax.get_legend_handles_labels()
                 if h and not handles:
-                    handles, labels = h, l
+                    handles, labels = h, lab
                 legend = ax.get_legend()
                 if legend is not None:
                     legend.remove()
@@ -258,21 +289,3 @@ def _export_figure(ctx: RenderContext, figure: Any) -> dict[str, Path]:
     )
 
 
-def _parse_layout_spec(raw: dict[str, Any]) -> LayoutSpec:
-    """Convert a raw layout dict to a LayoutSpec."""
-    kwargs: dict[str, Any] = {}
-    if "rows" in raw:
-        kwargs["rows"] = int(raw["rows"])
-    if "cols" in raw:
-        kwargs["cols"] = int(raw["cols"])
-    if "width_ratios" in raw:
-        kwargs["width_ratios"] = tuple(float(r) for r in raw["width_ratios"])
-    if "height_ratios" in raw:
-        kwargs["height_ratios"] = tuple(float(r) for r in raw["height_ratios"])
-    if "wspace" in raw:
-        kwargs["wspace"] = float(raw["wspace"])
-    if "hspace" in raw:
-        kwargs["hspace"] = float(raw["hspace"])
-    if "constrained_layout" in raw:
-        kwargs["constrained_layout"] = bool(raw["constrained_layout"])
-    return LayoutSpec(**kwargs)

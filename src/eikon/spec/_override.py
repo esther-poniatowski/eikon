@@ -47,11 +47,12 @@ def merge_spec_override(
             kwargs["margin_labels"] = {**base.margin_labels, **value}
         elif key == "tags" and isinstance(value, (list, tuple)):
             kwargs["tags"] = tuple(value)
-        elif key == "panels":
-            # Panels are not merged — they are replaced entirely.
-            # Merging individual panels would require matching by name,
-            # which is deferred to a future enhancement.
-            continue
+        elif key == "panels" and isinstance(value, (list, tuple)):
+            from eikon.spec._parse import _build_panel
+
+            kwargs["panels"] = tuple(
+                _build_panel(p) if isinstance(p, dict) else p for p in value
+            )
         else:
             kwargs[key] = value
 

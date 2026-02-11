@@ -46,7 +46,7 @@ registry_file: eikon-registry.yaml
 
     example_spec_path = project_dir / "specs" / "example.yaml"
     example_spec = """\
-# Example figure specification
+# Example figure specification — single panel
 spec_version: 1
 name: example
 title: "Example Figure"
@@ -69,8 +69,53 @@ export:
 """
     example_spec_path.write_text(example_spec, encoding="utf-8")
 
+    multi_spec_path = project_dir / "specs" / "multi-panel-example.yaml"
+    multi_spec = """\
+# Example figure specification — multi-panel layout
+spec_version: 1
+name: multi-panel-example
+title: "Multi-Panel Figure"
+title_kwargs:
+  fontsize: 14
+  y: 0.95
+tags: [example]
+panels:
+  - name: A
+    plot_type: line
+    row: 0
+    col: 0
+    label: "(a)"
+    hide_spines: [top, right]
+  - name: B
+    plot_type: scatter
+    row: 0
+    col: 1
+    label: "(b)"
+    hide_spines: [top, right]
+  - name: C
+    plot_type: bar
+    row: 1
+    col: [0, 1]
+    label: "(c)"
+    hide_spines: [top, right]
+layout:
+  rows: 2
+  cols: 2
+  height_ratios: [1.0, 0.8]
+  hspace: 0.3
+  wspace: 0.25
+shared_legend:
+  loc: upper right
+style: publication
+export:
+  formats: [pdf, png]
+  dpi: 300
+"""
+    multi_spec_path.write_text(multi_spec, encoding="utf-8")
+
     typer.echo(f"Initialized eikon project in {project_dir}")
     for dirname in dirs:
         typer.echo(f"  Created {dirname}/")
     typer.echo("  Created eikon.yaml")
     typer.echo("  Created specs/example.yaml")
+    typer.echo("  Created specs/multi-panel-example.yaml")

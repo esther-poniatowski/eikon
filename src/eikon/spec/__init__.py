@@ -9,7 +9,7 @@ from eikon.spec._figure import FigureSpec
 from eikon.spec._margin_labels import MarginLabelSpec, MarginLabelStyle, MarginTarget
 from eikon.spec._override import merge_spec_override
 from eikon.spec._panel import PanelSpec
-from eikon.spec._parse import parse_figure_file, parse_figure_spec
+from eikon.spec._parse import parse_figure_file, parse_figure_spec, parse_layout_spec
 
 __all__ = [
     "DataBinding",
@@ -21,4 +21,5 @@ __all__ = [
     "merge_spec_override",
     "parse_figure_file",
     "parse_figure_spec",
+    "parse_layout_spec",
 ]

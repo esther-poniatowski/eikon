@@ -20,8 +20,10 @@ def cli_render_by_name(
     reg = load_registry(config=config)
 
     entry = reg.get(name)
-    spec_path = Path(entry.get("spec_path", "")) if isinstance(entry, dict) else Path()
-    if not spec_path:
+    raw_path = entry.get("spec_path", "") if isinstance(entry, dict) else ""
+    if raw_path:
+        spec_path = Path(raw_path)
+    else:
         spec_path = paths.specs_dir / f"{name}.yaml"
 
     if not spec_path.is_file():

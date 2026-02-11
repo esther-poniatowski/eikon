@@ -63,6 +63,7 @@ __all__ = [
     "info",
     # Configuration
     "ProjectConfig",
+    "ResolvedPaths",
     "load_config",
     "resolve_paths",
     # Specifications
@@ -144,6 +145,13 @@ def render(
         try:
             cfg = load_config()
         except Exception:
+            import warnings
+
+            warnings.warn(
+                "Failed to load eikon.yaml; using built-in defaults.",
+                UserWarning,
+                stacklevel=2,
+            )
             cfg = ProjectConfig()
     if resolved_paths is not None:
         paths = resolved_paths
@@ -151,6 +159,13 @@ def render(
         try:
             paths = resolve_paths(cfg.paths)
         except Exception:
+            import warnings
+
+            warnings.warn(
+                "Failed to resolve project paths; using cwd-based defaults.",
+                UserWarning,
+                stacklevel=2,
+            )
             from eikon.config._resolver import ResolvedPaths
 
             paths = ResolvedPaths(

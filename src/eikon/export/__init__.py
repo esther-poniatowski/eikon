@@ -21,7 +21,7 @@ sanitize_filename
 
 from eikon.export._batch import batch_export, parse_export_spec
 from eikon.export._config import ExportSpec, ResolvedExportConfig, resolve_export_config
-from eikon.export._handlers import export_figure
+from eikon.export._handlers import export_figure, register_format_handler
 from eikon.export._paths import build_export_path
 from eikon.export._sanitize import sanitize_filename
 
@@ -32,6 +32,7 @@ __all__ = [
     "build_export_path",
     "export_figure",
     "parse_export_spec",
+    "register_format_handler",
     "resolve_export_config",
     "sanitize_filename",
 ]
