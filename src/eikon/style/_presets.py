@@ -2,7 +2,7 @@
 
 Three presets are provided out of the box:
 
-- **publication** — compact, serif fonts, suitable for journal figures.
+- **publication** — compact, sans-serif fonts, suitable for journal figures.
 - **presentation** — larger fonts, sans-serif, readable on slides.
 - **poster** — extra-large fonts and line widths for poster figures.
 """
@@ -14,7 +14,7 @@ __all__ = ["PRESETS", "get_preset"]
 PRESETS: dict[str, StyleSheet] = {
     "publication": StyleSheet(
         name="publication",
-        font_family="serif",
+        font_family="sans-serif",
         font_size=8.0,
         line_width=0.8,
         figure_size=(7.0, 5.0),

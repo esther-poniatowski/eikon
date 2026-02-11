@@ -85,7 +85,7 @@ class StyleDefaults:
     """
 
     base_style: str = "default"
-    font_family: str = "serif"
+    font_family: str = "sans-serif"
     font_size: float = 10.0
     figure_size: tuple[float, float] = (6.4, 4.8)
 

@@ -36,7 +36,7 @@ export:
 
 style:
   base_style: default
-  font_family: serif
+  font_family: sans-serif
   font_size: 10.0
   figure_size: [6.4, 4.8]
 
