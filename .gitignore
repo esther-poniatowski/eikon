@@ -19,7 +19,7 @@ __pycache__
 htmlcov/
 
 # Distribution / Packaging
-.egg-info
+*.egg-info/
 
 # Sphinx build output
 docs/_build/
