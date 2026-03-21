@@ -18,6 +18,7 @@ dependencies:
   - pyright                # code linting
   # Testing
   - pytest
+  - pytest-cov             # coverage plugin for Pytest
   - pytest-mock
   - pytest-pylint          # Pylint plugin for Pytest
   # Documentation
@@ -26,4 +27,5 @@ dependencies:
   - sphinx-rtd-theme       # ReadTheDocs theme
   - sphinx-needs           # for requirements and specifications in Sphinx
   - esbonio                # language server for Sphinx
+  - myst-parser            # Markdown support for Sphinx
 variables:

@@ -86,6 +86,55 @@ src/eikon/
 3. Add tests for new functionality or bug fixes.
 4. Open a pull request with a clear description of the changes.
 
+## Configuration File Organization
+
+This project separates configuration concerns between two locations:
+
+### `pyproject.toml` — Project Management
+
+Contains only build system, package metadata, dependencies, entry points, and tool configurations
+that **must** reside in `pyproject.toml` (because the tool does not support external config paths):
+
+- `[build-system]` — Build backend (setuptools)
+- `[project]` — Name, version, authors, license, description, keywords, classifiers, URLs
+- `[project.dependencies]` — Runtime dependencies
+- `[project.optional-dependencies]` — Optional dependency groups
+- `[project.scripts]` — CLI entry points
+- `[tool.setuptools]` — Package discovery and source layout
+- `[tool.pytest.ini_options]` — Pytest settings (pytest does not support custom config paths)
+
+### `config/tools/` — Tool-Specific Settings
+
+Contains dedicated configuration files for each development tool. This achieves modular,
+tool-specific settings that are decoupled from the main project file:
+
+| File                  | Tool                   | Purpose                           |
+|-----------------------|------------------------|-----------------------------------|
+| `black.toml`          | Black                  | Code formatting rules             |
+| `mypy.ini`            | MyPy                   | Static type checking rules        |
+| `pylintrc.ini`        | Pylint                 | Linting rules (main code)         |
+| `pylintrc_tests.ini`  | Pylint                 | Linting rules (test code)         |
+| `pyrightconfig.json`  | Pyright                | Static type analysis overrides    |
+| `releaserc.toml`      | Python Semantic Release| Versioning and changelog           |
+
+### `config/dictionaries/` — Spell Checking
+
+Custom word lists for CSpell (VS Code spell checker):
+
+| File          | Contents                    |
+|---------------|-----------------------------|
+| `project.txt` | Project-specific terms      |
+| `python.txt`  | Python language terms       |
+| `tools.txt`   | Development tool names      |
+
+### Rationale
+
+- **Modularity**: Each tool's configuration is self-contained and independently editable.
+- **Clarity**: `pyproject.toml` stays concise and focused on project identity.
+- **Discoverability**: Tool configs are grouped in a single directory, easy to locate.
+- **Flexibility**: Tools with complex configs (Pylint, MyPy) benefit from dedicated files
+  with inline comments explaining each setting.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the GPL-3.0-or-later license.

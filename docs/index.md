@@ -44,3 +44,10 @@ api/registry
 api/ext
 api/types
 ```
+
+```{toctree}
+:maxdepth: 1
+:caption: Architecture Decisions
+
+adr/adr-template
+```
