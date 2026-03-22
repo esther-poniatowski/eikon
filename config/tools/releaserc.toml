@@ -1,7 +1,7 @@
 # ==================================================================================================
 # Python Semantic Release Configurations for the `eikon` Package
 #
-# File: `config/releaserc.toml`
+# File: `config/tools/releaserc.toml`
 #
 # Usage
 # -----
