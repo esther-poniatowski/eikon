@@ -3,28 +3,28 @@ from pathlib import Path
 import typer
 
 from eikon import load_registry
-from eikon.config._loader import load_config
-from eikon.config._resolver import resolve_paths
+from eikon.cli.commands import get_project_root
+from eikon.config._session import ProjectSession
 from eikon.render._pipeline import render_figure
 from eikon.spec._parse import parse_figure_file
 
 
 def cli_render_by_name(
+    ctx: typer.Context,
     name: str = typer.Argument(..., help="Registered figure name"),
     formats: list[str] = typer.Option([], "--format", "-f", help="Export formats"),
     show: bool = typer.Option(False, "--show", help="Display figure interactively."),
 ) -> None:
     """Render a figure by registry name."""
-    config = load_config()
-    paths = resolve_paths(config.paths)
-    reg = load_registry(config=config)
+    session = ProjectSession.from_config(project_root=get_project_root(ctx))
+    reg = load_registry(config=session.config)
 
     entry = reg.get(name)
     raw_path = entry.get("spec_path", "") if isinstance(entry, dict) else ""
     if raw_path:
         spec_path = Path(raw_path)
     else:
-        spec_path = paths.specs_dir / f"{name}.yaml"
+        spec_path = session.paths.specs_dir / f"{name}.yaml"
 
     if not spec_path.is_file():
         typer.echo(
@@ -37,8 +37,7 @@ def cli_render_by_name(
 
     handle = render_figure(
         figure_spec,
-        config=config,
-        resolved_paths=paths,
+        session=session,
         formats=fmt_tuple,
         show=show,
     )

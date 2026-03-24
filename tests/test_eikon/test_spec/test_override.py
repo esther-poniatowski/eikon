@@ -1,5 +1,6 @@
 """Tests for eikon.spec._override."""
 
+from eikon.layout._grid import LayoutSpec
 from eikon.spec._figure import FigureSpec
 from eikon.spec._override import merge_spec_override
 from eikon.spec._panel import PanelSpec
@@ -23,9 +24,11 @@ class TestMergeSpecOverride:
         assert merged.tags == ("b", "c")
 
     def test_merge_layout(self):
-        base = FigureSpec(name="fig", layout={"rows": 1, "cols": 2})
+        base = FigureSpec(name="fig", layout=LayoutSpec(rows=1, cols=2))
         merged = merge_spec_override(base, {"layout": {"cols": 3}})
-        assert merged.layout == {"rows": 1, "cols": 3}
+        assert isinstance(merged.layout, LayoutSpec)
+        assert merged.layout.rows == 1
+        assert merged.layout.cols == 3
 
     def test_override_panels_from_dicts(self):
         base = FigureSpec(

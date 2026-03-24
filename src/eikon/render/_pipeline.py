@@ -1,28 +1,30 @@
 """Rendering pipeline orchestrator.
 
-Chains the rendering stages: config → style → layout → draw → post-process → export.
-Each stage is a small function with a clear input/output contract.
+Chains the rendering stages: config -> style -> layout -> draw -> post-process -> export.
+Each stage is a pure function with explicit typed inputs and outputs.
+The orchestrator composes stages without mutable shared state.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from eikon.config._loader import load_config
-from eikon.config._resolver import ResolvedPaths, resolve_paths
+from eikon.config._resolver import ResolvedPaths
 from eikon.config._schema import ProjectConfig
-from eikon.exceptions import ConfigNotFoundError, RenderError
+from eikon.config._session import ProjectSession
+from eikon.exceptions import RenderError
 from eikon.ext import discover_plugins
 from eikon.ext._hooks import HookName, fire_hook
-from eikon.layout._builder import build_layout
+from eikon.layout._builder import BuiltLayout, build_layout
 from eikon.layout._constraints import validate_layout_strict
+from eikon.layout._grid import LayoutSpec
 from eikon.layout._placement import resolve_placements
-from eikon.render._context import RenderContext
 from eikon.render._drawing import draw_panel
 from eikon.render._handle import FigureHandle
-from eikon.spec._figure import FigureSpec
-from eikon.spec._parse import parse_layout_spec
+from eikon.spec._figure import FigureSpec, SharedLegendConfig
+from eikon.spec._panel import PanelSpec
 from eikon.style._composer import resolve_style_chain
 from eikon.style._loader import load_style
 from eikon.style._presets import PRESETS
@@ -32,9 +34,162 @@ from eikon.style._sheet import StyleSheet
 __all__ = ["render_figure"]
 
 
+# ---------------------------------------------------------------------------
+# Stage result types
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedStyle:
+    """Output of the style resolution stage."""
+
+    sheet: StyleSheet
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedLayout:
+    """Output of the layout building stage."""
+
+    built: BuiltLayout
+
+
+# ---------------------------------------------------------------------------
+# Stage functions — each takes explicit parameters, returns explicit results
+# ---------------------------------------------------------------------------
+
+
+def stage_resolve_style(
+    *,
+    style_ref: str | None,
+    base_style: str,
+    styles_dir: Path,
+) -> ResolvedStyle:
+    """Resolve a style reference to a :class:`StyleSheet`."""
+    ref = style_ref or base_style
+
+    if ref is None or ref == "" or ref == "default":
+        return ResolvedStyle(sheet=StyleSheet(name="default"))
+
+    search_dirs = (styles_dir,)
+    sheet = load_style(ref, search_dirs=search_dirs)
+    if sheet.extends:
+        registry = _build_style_registry(search_dirs)
+        sheet = resolve_style_chain(sheet, registry)
+    return ResolvedStyle(sheet=sheet)
+
+
+def stage_build_layout(
+    *,
+    layout_spec: LayoutSpec,
+    panels: tuple[PanelSpec, ...],
+    style: StyleSheet,
+    figure_size: tuple[float, float],
+    dpi: int,
+) -> ResolvedLayout:
+    """Build the matplotlib Figure and Axes from layout and panel specs."""
+    placements = resolve_placements(panels, layout_spec)
+    validate_layout_strict(placements, layout_spec)
+
+    with style_context(style):
+        built = build_layout(
+            layout_spec, placements, figure_size=figure_size, dpi=dpi,
+        )
+    return ResolvedLayout(built=built)
+
+
+def stage_draw_panels(
+    *,
+    panels: tuple[PanelSpec, ...],
+    built: BuiltLayout,
+    style: StyleSheet,
+    styles_dir: Path,
+    data_dir: Path,
+) -> None:
+    """Draw all panels into their axes, applying per-panel styles."""
+    with style_context(style):
+        for panel in panels:
+            if panel.name not in built.axes:
+                continue
+            ax = built.axes[panel.name]
+            if panel.style is not None:
+                panel_sheet = load_style(panel.style, search_dirs=(styles_dir,))
+                with style_context(panel_sheet):
+                    draw_panel(ax, panel, data_dir=data_dir)
+            else:
+                draw_panel(ax, panel, data_dir=data_dir)
+
+
+def stage_post_process(
+    *,
+    built: BuiltLayout,
+    spec: FigureSpec,
+) -> None:
+    """Apply titles, labels, and other figure-level post-processing."""
+    fig = built.figure
+
+    if spec.title:
+        title_kw = spec.title_kwargs.to_kwargs() if spec.title_kwargs else {}
+        fig.suptitle(spec.title, **title_kw)
+
+    for panel in spec.panels:
+        if panel.label and panel.name in built.axes:
+            ax = built.axes[panel.name]
+            ax.set_title(panel.label)
+
+    for panel in spec.panels:
+        if panel.hide_spines and panel.name in built.axes:
+            ax = built.axes[panel.name]
+            for spine_name in panel.hide_spines:
+                ax.spines[spine_name].set_visible(False)
+            if "top" in panel.hide_spines:
+                ax.tick_params(top=False)
+            if "bottom" in panel.hide_spines:
+                ax.tick_params(bottom=False)
+            if "right" in panel.hide_spines:
+                ax.tick_params(right=False)
+            if "left" in panel.hide_spines:
+                ax.tick_params(left=False)
+
+    if spec.margin_labels:
+        from eikon.render._margin_labels import draw_margin_labels
+
+        draw_margin_labels(fig, built, spec.margin_labels)
+
+    if spec.shared_legend is not None:
+        _apply_shared_legend(fig, spec.panels, built, spec.shared_legend)
+
+
+def stage_export(
+    *,
+    figure: Any,
+    spec: FigureSpec,
+    output_dir: Path,
+    export_defaults: Any,
+    cli_formats: tuple[str, ...],
+) -> dict[str, Path]:
+    """Run the export pipeline for the rendered figure."""
+    from eikon.export._batch import batch_export
+
+    return batch_export(
+        figure=figure,
+        name=spec.name,
+        group=spec.group,
+        output_dir=output_dir,
+        export_defaults=export_defaults,
+        export_spec=spec.export,
+        cli_formats=cli_formats,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Orchestrator — thin composition of stages
+# ---------------------------------------------------------------------------
+
+
 def render_figure(
     spec: FigureSpec,
     *,
+    session: ProjectSession | None = None,
     config: ProjectConfig | None = None,
     resolved_paths: ResolvedPaths | None = None,
     formats: tuple[str, ...] = (),
@@ -47,8 +202,13 @@ def render_figure(
     ----------
     spec : FigureSpec
         The figure specification to render.
+    session : ProjectSession, optional
+        A pre-built project session.  Takes precedence over *config*
+        and *resolved_paths*.
     config : ProjectConfig, optional
         Project configuration.  Defaults to built-in defaults.
+    resolved_paths : ResolvedPaths, optional
+        Pre-resolved paths.
     formats : tuple[str, ...]
         Export format names (e.g. ``("pdf", "svg")``).  Empty = no export.
     show : bool
@@ -69,43 +229,55 @@ def render_figure(
     import eikon.contrib  # noqa: F401  — register built-in plot types lazily
     discover_plugins()
 
-    if config is not None:
-        cfg = config
+    if session is not None:
+        sess = session
+    elif config is not None or resolved_paths is not None:
+        sess = ProjectSession.from_config(config=config, strict=False)
+        if resolved_paths is not None:
+            sess = ProjectSession(config=sess.config, paths=resolved_paths)
     else:
-        try:
-            cfg = load_config()
-        except ConfigNotFoundError:
-            cfg = ProjectConfig()
-    if resolved_paths is not None:
-        paths = resolved_paths
-    else:
-        try:
-            paths = resolve_paths(cfg.paths)
-        except ConfigNotFoundError:
-            paths = ResolvedPaths(
-                project_root=Path.cwd(),
-                output_dir=Path.cwd() / cfg.paths.output_dir,
-                styles_dir=Path.cwd() / cfg.paths.styles_dir,
-                specs_dir=Path.cwd() / cfg.paths.specs_dir,
-                data_dir=Path.cwd() / cfg.paths.data_dir,
-            )
+        sess = ProjectSession.from_config(strict=False)
 
-    ctx = RenderContext(
-        spec=spec,
-        config=cfg,
-        paths=paths,
-        export_formats=formats,
-        show=show,
-        overrides=overrides or {},
-    )
+    cfg = sess.config
+    paths = sess.paths
 
     try:
-        _resolve_style(ctx)
-        fire_hook(HookName.PRE_RENDER, spec=ctx.spec, config=ctx.config)
-        _build_layout(ctx)
-        _draw_panels(ctx)
-        _post_process(ctx)
-        fire_hook(HookName.POST_RENDER, spec=ctx.spec, layout=ctx.layout)
+        # Stage 1: Style resolution
+        resolved_style = stage_resolve_style(
+            style_ref=spec.style,
+            base_style=cfg.style.base_style,
+            styles_dir=paths.styles_dir,
+        )
+
+        fire_hook(HookName.PRE_RENDER, spec=spec, config=cfg)
+
+        # Stage 2: Layout building
+        figure_size = (
+            resolved_style.sheet.figure_size
+            if resolved_style.sheet.figure_size
+            else cfg.style.figure_size
+        )
+        resolved_layout = stage_build_layout(
+            layout_spec=spec.layout or LayoutSpec(),
+            panels=spec.panels,
+            style=resolved_style.sheet,
+            figure_size=figure_size,
+            dpi=cfg.export.dpi,
+        )
+
+        # Stage 3: Panel drawing
+        stage_draw_panels(
+            panels=spec.panels,
+            built=resolved_layout.built,
+            style=resolved_style.sheet,
+            styles_dir=paths.styles_dir,
+            data_dir=paths.data_dir,
+        )
+
+        # Stage 4: Post-processing
+        stage_post_process(built=resolved_layout.built, spec=spec)
+
+        fire_hook(HookName.POST_RENDER, spec=spec, layout=resolved_layout.built)
     except Exception as exc:
         if not isinstance(exc, RenderError):
             msg = f"Rendering failed for {spec.name!r}: {exc}"
@@ -113,15 +285,21 @@ def render_figure(
         raise
 
     handle = FigureHandle(
-        spec=ctx.spec,
-        figure=ctx.layout.figure if ctx.layout else None,
-        axes=dict(ctx.layout.axes) if ctx.layout else {},
+        spec=spec,
+        figure=resolved_layout.built.figure,
+        axes=dict(resolved_layout.built.axes),
     )
 
-    # Export stage (after rendering, before show)
-    if ctx.export_formats and handle.figure is not None:
+    # Stage 5: Export (after rendering, before show)
+    if formats and handle.figure is not None:
         try:
-            export_paths = _export_figure(ctx, handle.figure)
+            export_paths = stage_export(
+                figure=handle.figure,
+                spec=spec,
+                output_dir=paths.output_dir,
+                export_defaults=cfg.export,
+                cli_formats=formats,
+            )
             handle.export_paths = export_paths
         except Exception as exc:
             if not isinstance(exc, RenderError):
@@ -135,31 +313,15 @@ def render_figure(
     return handle
 
 
-def _resolve_style(ctx: RenderContext) -> None:
-    """Resolve the figure's style to a StyleSheet."""
-    style_ref = ctx.spec.style or ctx.config.style.base_style
-
-    if style_ref is None or style_ref == "" or style_ref == "default":
-        ctx.style = StyleSheet(name="default")
-        return
-
-    search_dirs = (ctx.paths.styles_dir,)
-    sheet = load_style(style_ref, search_dirs=search_dirs)
-    if sheet.extends:
-        registry = _build_style_registry(search_dirs)
-        sheet = resolve_style_chain(sheet, registry)
-    ctx.style = sheet
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
 
 
 def _build_style_registry(
     search_dirs: tuple[Path, ...],
 ) -> dict[str, StyleSheet]:
-    """Build a style registry from presets and user style files.
-
-    Scans the given directories for ``.yaml``, ``.yml``, and ``.mplstyle``
-    files so that user styles can ``extends`` other user styles, not only
-    built-in presets.
-    """
+    """Build a style registry from presets and user style files."""
     registry: dict[str, StyleSheet] = dict(PRESETS)
     for directory in search_dirs:
         if not directory.is_dir():
@@ -174,118 +336,23 @@ def _build_style_registry(
     return registry
 
 
-def _build_layout(ctx: RenderContext) -> None:
-    """Build the matplotlib Figure and Axes from the spec's layout."""
-    layout_dict = ctx.spec.layout or {}
-    layout = parse_layout_spec(layout_dict)
-
-    placements = resolve_placements(ctx.spec.panels, layout)
-    validate_layout_strict(placements, layout)
-
-    figure_size = (
-        ctx.style.figure_size
-        if ctx.style and ctx.style.figure_size
-        else ctx.config.style.figure_size
-    )
-    dpi = ctx.config.export.dpi
-
-    # Apply style context around layout building and drawing
-    assert ctx.style is not None
-    with style_context(ctx.style):
-        ctx.layout = build_layout(
-            layout, placements, figure_size=figure_size, dpi=dpi,
-        )
-
-
-def _draw_panels(ctx: RenderContext) -> None:
-    """Draw all panels into their axes, applying per-panel styles."""
-    assert ctx.layout is not None
-    assert ctx.style is not None
-    with style_context(ctx.style):
-        for panel in ctx.spec.panels:
-            if panel.name not in ctx.layout.axes:
-                continue
-            ax = ctx.layout.axes[panel.name]
-            if panel.style is not None:
-                search_dirs = (ctx.paths.styles_dir,)
-                panel_sheet = load_style(panel.style, search_dirs=search_dirs)
-                with style_context(panel_sheet):
-                    draw_panel(ax, panel, data_dir=ctx.paths.data_dir)
-            else:
-                draw_panel(ax, panel, data_dir=ctx.paths.data_dir)
-
-
-def _post_process(ctx: RenderContext) -> None:
-    """Apply titles, labels, and other figure-level post-processing."""
-    assert ctx.layout is not None
-    fig = ctx.layout.figure
-
-    if ctx.spec.title:
-        title_kw = ctx.spec.title_kwargs or {}
-        fig.suptitle(ctx.spec.title, **title_kw)
-
-    # Apply panel labels
-    for panel in ctx.spec.panels:
-        if panel.label and panel.name in ctx.layout.axes:
-            ax = ctx.layout.axes[panel.name]
-            ax.set_title(panel.label)
-
-    # Hide spines per panel
-    for panel in ctx.spec.panels:
-        if panel.hide_spines and panel.name in ctx.layout.axes:
-            ax = ctx.layout.axes[panel.name]
-            for spine_name in panel.hide_spines:
-                ax.spines[spine_name].set_visible(False)
-            # Remove ticks on hidden spines
-            if "top" in panel.hide_spines or "bottom" in panel.hide_spines:
-                if "top" in panel.hide_spines:
-                    ax.tick_params(top=False)
-                if "bottom" in panel.hide_spines:
-                    ax.tick_params(bottom=False)
-            if "left" in panel.hide_spines or "right" in panel.hide_spines:
-                if "right" in panel.hide_spines:
-                    ax.tick_params(right=False)
-                if "left" in panel.hide_spines:
-                    ax.tick_params(left=False)
-
-    # Margin labels
-    if ctx.spec.margin_labels:
-        from eikon.render._margin_labels import draw_margin_labels
-
-        draw_margin_labels(fig, ctx.layout, ctx.spec.margin_labels)
-
-    # Shared legend: collect handles from the first panel that has them,
-    # remove per-panel legends, and place a single figure-level legend.
-    if ctx.spec.shared_legend is not None:
-        handles: list[Any] = []
-        labels: list[str] = []
-        for panel in ctx.spec.panels:
-            if panel.name in ctx.layout.axes:
-                ax = ctx.layout.axes[panel.name]
-                h, lab = ax.get_legend_handles_labels()
-                if h and not handles:
-                    handles, labels = h, lab
-                legend = ax.get_legend()
-                if legend is not None:
-                    legend.remove()
-        if handles:
-            fig.legend(handles, labels, **ctx.spec.shared_legend)
-
-
-def _export_figure(ctx: RenderContext, figure: Any) -> dict[str, Path]:
-    """Run the export pipeline for the rendered figure."""
-    from eikon.export._batch import batch_export, parse_export_spec
-
-    export_spec = parse_export_spec(ctx.spec.export)
-
-    return batch_export(
-        figure=figure,
-        name=ctx.spec.name,
-        group=ctx.spec.group,
-        output_dir=ctx.paths.output_dir,
-        export_defaults=ctx.config.export,
-        export_spec=export_spec,
-        cli_formats=ctx.export_formats,
-    )
-
-
+def _apply_shared_legend(
+    fig: Any,
+    panels: tuple[PanelSpec, ...],
+    built: BuiltLayout,
+    legend_config: SharedLegendConfig,
+) -> None:
+    """Collect handles from the first panel and place a figure-level legend."""
+    handles: list[Any] = []
+    labels: list[str] = []
+    for panel in panels:
+        if panel.name in built.axes:
+            ax = built.axes[panel.name]
+            h, lab = ax.get_legend_handles_labels()
+            if h and not handles:
+                handles, labels = h, lab
+            legend = ax.get_legend()
+            if legend is not None:
+                legend.remove()
+    if handles:
+        fig.legend(handles, labels, **legend_config.to_kwargs())

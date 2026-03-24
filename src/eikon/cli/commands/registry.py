@@ -1,26 +1,27 @@
 import json
+from pathlib import Path
 
 import typer
 
 from eikon import load_registry
-from eikon.config._loader import load_config
-from eikon.config._resolver import resolve_paths
+from eikon.cli.commands import get_project_root
+from eikon.config._session import ProjectSession
 from eikon.exceptions import RegistryError
 from eikon.registry import Registry
 
 app = typer.Typer(add_completion=False, help="Manage the figure registry")
 
 
-def _load_reg() -> Registry:
-    config = load_config()
-    paths = resolve_paths(config.paths)
-    reg = load_registry(config=config)
-    reg.path = paths.project_root / config.registry_file
+def _load_reg(project_root: Path | None = None) -> Registry:
+    session = ProjectSession.from_config(project_root=project_root)
+    reg = load_registry(config=session.config)
+    reg.path = session.paths.project_root / session.config.registry_file
     return reg
 
 
 @app.command("list")
 def registry_list(
+    ctx: typer.Context,
     tags: list[str] = typer.Option(
         [], "--tag", "-t", help="Filter by tag (repeatable)."
     ),
@@ -29,7 +30,7 @@ def registry_list(
         False, "--match-all", help="Require all tags to match."
     ),
 ) -> None:
-    reg = _load_reg()
+    reg = _load_reg(get_project_root(ctx))
 
     if tags or group:
         entries = reg.query(tags=tuple(tags), group=group, match_all_tags=match_all)
@@ -52,6 +53,7 @@ def registry_list(
 
 @app.command("add")
 def registry_add(
+    ctx: typer.Context,
     name: str = typer.Argument(..., help="Figure name to register."),
     tags: list[str] = typer.Option(
         [], "--tag", "-t", help="Tag (repeatable)."
@@ -66,7 +68,7 @@ def registry_add(
         help="Path to the figure spec YAML file (stored in registry metadata).",
     ),
 ) -> None:
-    reg = _load_reg()
+    reg = _load_reg(get_project_root(ctx))
 
     try:
         reg.register(
@@ -86,9 +88,10 @@ def registry_add(
 
 @app.command("remove")
 def registry_remove(
+    ctx: typer.Context,
     name: str = typer.Argument(..., help="Figure name to remove."),
 ) -> None:
-    reg = _load_reg()
+    reg = _load_reg(get_project_root(ctx))
 
     try:
         reg.remove(name)
@@ -102,9 +105,10 @@ def registry_remove(
 
 @app.command("show")
 def registry_show(
+    ctx: typer.Context,
     name: str = typer.Argument(..., help="Figure name to show."),
 ) -> None:
-    reg = _load_reg()
+    reg = _load_reg(get_project_root(ctx))
 
     try:
         entry = reg.get(name)

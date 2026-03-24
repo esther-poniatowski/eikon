@@ -2,13 +2,14 @@ from pathlib import Path
 
 import typer
 
-from eikon.config._loader import load_config
-from eikon.config._resolver import resolve_paths
+from eikon.cli.commands import get_project_root
+from eikon.config._session import ProjectSession
 from eikon.render._pipeline import render_figure
 from eikon.spec._parse import parse_figure_file
 
 
 def cli_render(
+    ctx: typer.Context,
     spec_path: str = typer.Argument(..., help="Path to a figure spec YAML file."),
     formats: list[str] = typer.Option(  # noqa: B006
         [], "--format", "-f", help="Export format(s): pdf, svg, png."
@@ -30,12 +31,10 @@ def cli_render(
     fmt_tuple = tuple(formats) if formats else ()
 
     try:
-        config = load_config()
-        paths = resolve_paths(config.paths)
+        session = ProjectSession.from_config(project_root=get_project_root(ctx))
         handle = render_figure(
             figure_spec,
-            config=config,
-            resolved_paths=paths,
+            session=session,
             formats=fmt_tuple,
             show=show,
         )

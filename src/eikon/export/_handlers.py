@@ -84,47 +84,36 @@ def get_handler(fmt: ExportFormat) -> _HandlerFn:
     if fmt in _HANDLER_REGISTRY:
         return _HANDLER_REGISTRY[fmt]
 
+    def _make_handler(format_str: str, *, use_dpi: bool = True) -> _HandlerFn:
+        def handler(figure: Any, path: Path, config: ResolvedExportConfig) -> None:
+            _save_default(figure, path, config, fmt=format_str, use_dpi=use_dpi)
+        return handler
+
     _builtins: dict[ExportFormat, _HandlerFn] = {
-        ExportFormat.PDF: _save_pdf,
-        ExportFormat.SVG: _save_svg,
-        ExportFormat.PNG: _save_png,
+        ExportFormat.PDF: _make_handler("pdf"),
+        ExportFormat.SVG: _make_handler("svg", use_dpi=False),
+        ExportFormat.PNG: _make_handler("png"),
     }
     return _builtins[fmt]
 
 
-def _save_pdf(figure: Any, path: Path, config: ResolvedExportConfig) -> None:
-    """Save figure as PDF."""
-    figure.savefig(
-        path,
-        format="pdf",
-        dpi=config.dpi,
-        transparent=config.transparent,
-        bbox_inches=config.bbox_inches,
-        pad_inches=config.pad_inches,
-        metadata=config.metadata if config.metadata else None,
-    )
-
-
-def _save_svg(figure: Any, path: Path, config: ResolvedExportConfig) -> None:
-    """Save figure as SVG."""
-    figure.savefig(
-        path,
-        format="svg",
-        transparent=config.transparent,
-        bbox_inches=config.bbox_inches,
-        pad_inches=config.pad_inches,
-        metadata=config.metadata if config.metadata else None,
-    )
-
-
-def _save_png(figure: Any, path: Path, config: ResolvedExportConfig) -> None:
-    """Save figure as PNG."""
-    figure.savefig(
-        path,
-        format="png",
-        dpi=config.dpi,
-        transparent=config.transparent,
-        bbox_inches=config.bbox_inches,
-        pad_inches=config.pad_inches,
-        metadata=config.metadata if config.metadata else None,
-    )
+def _save_default(
+    figure: Any,
+    path: Path,
+    config: ResolvedExportConfig,
+    *,
+    fmt: str,
+    use_dpi: bool = True,
+) -> None:
+    """Save figure in the given format with standard savefig options."""
+    kwargs: dict[str, Any] = {
+        "format": fmt,
+        "transparent": config.transparent,
+        "bbox_inches": config.bbox_inches,
+        "pad_inches": config.pad_inches,
+    }
+    if use_dpi:
+        kwargs["dpi"] = config.dpi
+    if config.metadata:
+        kwargs["metadata"] = config.metadata
+    figure.savefig(path, **kwargs)

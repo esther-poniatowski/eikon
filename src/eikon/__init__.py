@@ -40,7 +40,7 @@ try:
 except PackageNotFoundError:
     __version__ = "0.0.0+unknown"
 
-from eikon.config import ProjectConfig, load_config, resolve_paths  # noqa: E402
+from eikon.config import ProjectConfig, ProjectSession, load_config, resolve_paths  # noqa: E402
 from eikon.config._resolver import ResolvedPaths  # noqa: E402
 from eikon.export import ExportSpec, batch_export  # noqa: E402
 from eikon.layout import BuiltLayout, LayoutSpec, build_layout  # noqa: E402
@@ -53,6 +53,8 @@ from eikon.spec import (  # noqa: E402
     MarginLabelStyle,
     MarginTarget,
     PanelSpec,
+    SharedLegendConfig,
+    TitleConfig,
     parse_figure_spec,
 )
 from eikon.style import StyleSheet, load_style, style_context  # noqa: E402
@@ -63,6 +65,7 @@ __all__ = [
     "info",
     # Configuration
     "ProjectConfig",
+    "ProjectSession",
     "ResolvedPaths",
     "load_config",
     "resolve_paths",
@@ -73,6 +76,8 @@ __all__ = [
     "MarginLabelStyle",
     "MarginTarget",
     "PanelSpec",
+    "SharedLegendConfig",
+    "TitleConfig",
     "parse_figure_spec",
     # Style
     "StyleSheet",
@@ -108,9 +113,11 @@ def render(
     *,
     config: ProjectConfig | None = None,
     resolved_paths: ResolvedPaths | None = None,
+    session: ProjectSession | None = None,
     formats: tuple[str, ...] = (),
     overrides: dict[str, object] | None = None,
     show: bool = False,
+    strict: bool = True,
 ) -> FigureHandle:
     """Convenience function: render a figure by name or spec.
 
@@ -125,12 +132,20 @@ def render(
         spec file.
     config : ProjectConfig, optional
         Project configuration.  If ``None``, uses built-in defaults.
+    resolved_paths : ResolvedPaths, optional
+        Pre-resolved paths.  Prefer passing a *session* instead.
+    session : ProjectSession, optional
+        A pre-built session.  Takes precedence over *config* and
+        *resolved_paths* when provided.
     formats : tuple[str, ...]
         Export format names (e.g. ``("pdf", "svg")``).
     overrides : dict[str, object], optional
         Per-call overrides forwarded to the pipeline.
     show : bool
         Whether to display the figure interactively.
+    strict : bool
+        If ``True`` (default), let config/path errors propagate.
+        If ``False``, fall back to built-in defaults.
 
     Returns
     -------
@@ -139,49 +154,24 @@ def render(
     """
     from pathlib import Path
 
-    if config is not None:
-        cfg = config
+    if session is not None:
+        sess = session
+    elif config is not None or resolved_paths is not None:
+        cfg = config or ProjectSession.from_config(strict=strict).config
+        if resolved_paths is not None:
+            paths = resolved_paths
+        else:
+            paths = ProjectSession.from_config(config=cfg, strict=strict).paths
+        sess = ProjectSession(config=cfg, paths=paths)
     else:
-        try:
-            cfg = load_config()
-        except Exception:
-            import warnings
-
-            warnings.warn(
-                "Failed to load eikon.yaml; using built-in defaults.",
-                UserWarning,
-                stacklevel=2,
-            )
-            cfg = ProjectConfig()
-    if resolved_paths is not None:
-        paths = resolved_paths
-    else:
-        try:
-            paths = resolve_paths(cfg.paths)
-        except Exception:
-            import warnings
-
-            warnings.warn(
-                "Failed to resolve project paths; using cwd-based defaults.",
-                UserWarning,
-                stacklevel=2,
-            )
-            from eikon.config._resolver import ResolvedPaths
-
-            paths = ResolvedPaths(
-                project_root=Path.cwd(),
-                output_dir=Path.cwd() / cfg.paths.output_dir,
-                styles_dir=Path.cwd() / cfg.paths.styles_dir,
-                specs_dir=Path.cwd() / cfg.paths.specs_dir,
-                data_dir=Path.cwd() / cfg.paths.data_dir,
-            )
+        sess = ProjectSession.from_config(strict=strict)
 
     if isinstance(name_or_spec, str):
         from eikon.spec import parse_figure_file
 
         spec_entry = None
         try:
-            reg = load_registry(config=cfg)
+            reg = load_registry(config=sess.config)
             spec_entry = reg.get(name_or_spec)
         except Exception:
             spec_entry = None
@@ -190,7 +180,7 @@ def render(
         if spec_entry and spec_entry.get("spec_path"):
             spec_path = Path(spec_entry["spec_path"])
             if not spec_path.is_absolute():
-                spec_path = paths.project_root / spec_path
+                spec_path = sess.paths.project_root / spec_path
         else:
             if not spec_entry:
                 import warnings
@@ -201,7 +191,7 @@ def render(
                     stacklevel=2,
                 )
             if not spec_path.suffix:
-                spec_path = paths.specs_dir / f"{spec_path.name}.yaml"
+                spec_path = sess.paths.specs_dir / f"{spec_path.name}.yaml"
 
         spec = parse_figure_file(spec_path)
     else:
@@ -209,8 +199,7 @@ def render(
 
     return render_figure(
         spec,
-        config=cfg,
-        resolved_paths=paths,
+        session=sess,
         formats=formats,
         show=show,
         overrides=dict(overrides) if overrides else {},

@@ -11,9 +11,10 @@ import yaml
 
 from eikon.config._validation import validate_figure_spec
 from eikon.exceptions import ConfigError, SpecValidationError
+from eikon.export._config import ExportSpec
 from eikon.layout._grid import LayoutSpec
 from eikon.spec._data import DataBinding
-from eikon.spec._figure import FigureSpec
+from eikon.spec._figure import FigureSpec, SharedLegendConfig, TitleConfig
 from eikon.spec._margin_labels import MarginLabelSpec, MarginLabelStyle, MarginTarget
 from eikon.spec._panel import PanelSpec
 
@@ -82,8 +83,12 @@ def parse_figure_spec(raw: dict[str, Any]) -> FigureSpec:
         else None
     )
 
-    title_kwargs = dict(raw["title_kwargs"]) if "title_kwargs" in raw else None
-    shared_legend = dict(raw["shared_legend"]) if "shared_legend" in raw else None
+    layout = parse_layout_spec(raw["layout"]) if "layout" in raw else None
+    export = _build_export_spec(raw["export"]) if "export" in raw else None
+    title_kwargs = _build_title_config(raw["title_kwargs"]) if "title_kwargs" in raw else None
+    shared_legend = (
+        _build_shared_legend_config(raw["shared_legend"]) if "shared_legend" in raw else None
+    )
 
     return FigureSpec(
         name=raw["name"],
@@ -91,9 +96,9 @@ def parse_figure_spec(raw: dict[str, Any]) -> FigureSpec:
         tags=tuple(raw.get("tags", [])),
         group=raw.get("group", ""),
         panels=panels,
-        layout=raw.get("layout"),
+        layout=layout,
         style=raw.get("style"),
-        export=raw.get("export"),
+        export=export,
         title_kwargs=title_kwargs,
         shared_legend=shared_legend,
         margin_labels=margin_labels,
@@ -217,6 +222,68 @@ def _build_data_binding(raw: dict[str, Any]) -> DataBinding:
         transforms=tuple(raw.get("transforms", [])),
         params=dict(raw.get("params", {})),
     )
+
+
+def _build_title_config(raw: dict[str, Any]) -> TitleConfig:
+    """Construct a :class:`TitleConfig` from a raw dictionary."""
+    known_keys = {"fontsize", "fontweight", "y", "x", "ha"}
+    kwargs: dict[str, Any] = {}
+    extra: dict[str, Any] = {}
+    for key, value in raw.items():
+        if key in known_keys:
+            if key == "fontsize":
+                kwargs["fontsize"] = float(value)
+            elif key == "y":
+                kwargs["y"] = float(value)
+            elif key == "x":
+                kwargs["x"] = float(value)
+            else:
+                kwargs[key] = value
+        else:
+            extra[key] = value
+    if extra:
+        kwargs["extra"] = extra
+    return TitleConfig(**kwargs)
+
+
+def _build_shared_legend_config(raw: dict[str, Any]) -> SharedLegendConfig:
+    """Construct a :class:`SharedLegendConfig` from a raw dictionary."""
+    known_keys = {"loc", "ncol", "fontsize", "frameon"}
+    kwargs: dict[str, Any] = {}
+    extra: dict[str, Any] = {}
+    for key, value in raw.items():
+        if key in known_keys:
+            if key == "ncol":
+                kwargs["ncol"] = int(value)
+            elif key == "frameon":
+                kwargs["frameon"] = bool(value)
+            else:
+                kwargs[key] = value
+        else:
+            extra[key] = value
+    if extra:
+        kwargs["extra"] = extra
+    return SharedLegendConfig(**kwargs)
+
+
+def _build_export_spec(raw: dict[str, Any]) -> ExportSpec:
+    """Construct an :class:`ExportSpec` from a raw dictionary."""
+    kwargs: dict[str, Any] = {}
+    if "formats" in raw:
+        kwargs["formats"] = tuple(str(f) for f in raw["formats"])
+    if "dpi" in raw:
+        kwargs["dpi"] = int(raw["dpi"])
+    if "transparent" in raw:
+        kwargs["transparent"] = bool(raw["transparent"])
+    if "filename_template" in raw:
+        kwargs["filename_template"] = str(raw["filename_template"])
+    if "subdirectory" in raw:
+        kwargs["subdirectory"] = str(raw["subdirectory"])
+    if "collision" in raw:
+        kwargs["collision"] = str(raw["collision"])
+    if "metadata" in raw:
+        kwargs["metadata"] = dict(raw["metadata"])
+    return ExportSpec(**kwargs)
 
 
 def parse_layout_spec(raw: dict[str, Any]) -> LayoutSpec:

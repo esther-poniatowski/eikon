@@ -9,8 +9,6 @@ render_figure
     Main pipeline entry point — renders a FigureSpec to a FigureHandle.
 FigureHandle
     Lightweight wrapper around a rendered figure.
-RenderContext
-    Internal mutable state for the pipeline.
 PlotFunction
     Protocol for plot functions.
 """

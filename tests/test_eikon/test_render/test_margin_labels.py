@@ -503,7 +503,7 @@ class TestPipelineIntegration:
                 PanelSpec(name="A", plot_type="noop", row=0, col=0),
                 PanelSpec(name="B", plot_type="noop", row=0, col=1),
             ),
-            layout={"rows": 1, "cols": 2},
+            layout=LayoutSpec(rows=1, cols=2),
             margin_labels={
                 "top": MarginLabelSpec(labels=("Col 1", "Col 2")),
             },

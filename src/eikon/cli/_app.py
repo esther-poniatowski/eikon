@@ -21,14 +21,14 @@ def main_callback(
     ),
 ) -> None:
     """Root command for the package CLI."""
-    import os
     from pathlib import Path
 
     if version:
         typer.echo(__version__)
         raise typer.Exit()
+    ctx.ensure_object(dict)
     if project_root:
-        os.environ["EIKON_PROJECT_ROOT"] = str(Path(project_root).resolve())
+        ctx.obj["project_root"] = Path(project_root).resolve()
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())
 

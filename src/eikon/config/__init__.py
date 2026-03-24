@@ -12,12 +12,14 @@ from eikon.config._schema import (
     ProjectConfig,
     StyleDefaults,
 )
+from eikon.config._session import ProjectSession
 from eikon.config._validation import validate_config
 
 __all__ = [
     "ExportDefaults",
     "PathsConfig",
     "ProjectConfig",
+    "ProjectSession",
     "StyleDefaults",
     "ResolvedPaths",
     "load_config",

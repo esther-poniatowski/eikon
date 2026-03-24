@@ -11,9 +11,10 @@ from eikon.config._resolver import resolve_paths
 from eikon.exceptions import RenderError
 from eikon.ext._hooks import HookName, clear_hooks, register_hook
 from eikon.ext._plot_types import _clear_registry, register_plot_type
+from eikon.layout._grid import LayoutSpec
 from eikon.render._handle import FigureHandle
 from eikon.render._pipeline import render_figure
-from eikon.spec._figure import FigureSpec
+from eikon.spec._figure import FigureSpec, SharedLegendConfig, TitleConfig
 from eikon.spec._panel import PanelSpec
 
 matplotlib.use("Agg")
@@ -56,7 +57,7 @@ class TestRenderFigure:
                 PanelSpec(name="A", plot_type="noop", row=0, col=0),
                 PanelSpec(name="B", plot_type="noop", row=0, col=1),
             ),
-            layout={"rows": 1, "cols": 2},
+            layout=LayoutSpec(rows=1, cols=2),
         )
         paths = resolve_paths(DEFAULT_CONFIG.paths, project_root=tmp_path)
         handle = render_figure(spec, config=DEFAULT_CONFIG, resolved_paths=paths)
@@ -145,7 +146,7 @@ class TestRenderFigure:
         spec = FigureSpec(
             name="tkw",
             title="Custom",
-            title_kwargs={"fontsize": 20, "y": 0.95},
+            title_kwargs=TitleConfig(fontsize=20, y=0.95),
             panels=(PanelSpec(name="A", plot_type="noop"),),
         )
         paths = resolve_paths(DEFAULT_CONFIG.paths, project_root=tmp_path)
@@ -181,7 +182,7 @@ class TestRenderFigure:
         register_plot_type("legend_plot", _legend_plot)
         spec = FigureSpec(
             name="legend",
-            shared_legend={"loc": "upper right"},
+            shared_legend=SharedLegendConfig(loc="upper right"),
             panels=(PanelSpec(name="A", plot_type="legend_plot"),),
         )
         paths = resolve_paths(DEFAULT_CONFIG.paths, project_root=tmp_path)
@@ -265,7 +266,7 @@ class TestRenderFigure:
                 PanelSpec(name="A", plot_type="noop", row=0, col=0),
                 PanelSpec(name="B", plot_type="noop", row=0, col=1),
             ),
-            layout={"rows": 1, "cols": 2, "width_ratios": [2.0, 1.0]},
+            layout=LayoutSpec(rows=1, cols=2, width_ratios=(2.0, 1.0)),
         )
         paths = resolve_paths(DEFAULT_CONFIG.paths, project_root=tmp_path)
         handle = render_figure(spec, config=DEFAULT_CONFIG, resolved_paths=paths)

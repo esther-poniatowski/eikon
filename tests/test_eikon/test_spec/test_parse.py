@@ -5,6 +5,8 @@ from pathlib import Path
 import pytest
 
 from eikon.exceptions import SpecValidationError
+from eikon.layout._grid import LayoutSpec
+from eikon.spec._figure import SharedLegendConfig, TitleConfig
 from eikon.spec._parse import parse_figure_file, parse_figure_spec
 
 
@@ -29,7 +31,7 @@ class TestParseFigureSpec:
 
     def test_layout_preserved(self, sample_spec_dict: dict):
         spec = parse_figure_spec(sample_spec_dict)
-        assert spec.layout == {"rows": 1, "cols": 2}
+        assert spec.layout == LayoutSpec(rows=1, cols=2)
 
     def test_validation_error(self):
         with pytest.raises(SpecValidationError):
@@ -68,7 +70,9 @@ class TestParseFigureSpec:
             "name": "fig",
             "title_kwargs": {"y": 0.95, "fontsize": 14},
         })
-        assert spec.title_kwargs == {"y": 0.95, "fontsize": 14}
+        assert isinstance(spec.title_kwargs, TitleConfig)
+        assert spec.title_kwargs.y == 0.95
+        assert spec.title_kwargs.fontsize == 14.0
 
     def test_title_kwargs_default_none(self):
         spec = parse_figure_spec({"name": "fig"})
@@ -79,14 +83,17 @@ class TestParseFigureSpec:
             "name": "fig",
             "shared_legend": {"loc": "upper right", "ncol": 2},
         })
-        assert spec.shared_legend == {"loc": "upper right", "ncol": 2}
+        assert isinstance(spec.shared_legend, SharedLegendConfig)
+        assert spec.shared_legend.loc == "upper right"
+        assert spec.shared_legend.ncol == 2
 
     def test_shared_legend_empty_dict(self):
         spec = parse_figure_spec({
             "name": "fig",
             "shared_legend": {},
         })
-        assert spec.shared_legend == {}
+        assert isinstance(spec.shared_legend, SharedLegendConfig)
+        assert spec.shared_legend.to_kwargs() == {}
 
     def test_shared_legend_default_none(self):
         spec = parse_figure_spec({"name": "fig"})

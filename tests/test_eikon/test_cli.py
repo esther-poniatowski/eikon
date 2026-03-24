@@ -124,23 +124,17 @@ class TestCliValidate:
 
 
 class TestCliProjectRoot:
-    """--project-root global flag sets EIKON_PROJECT_ROOT."""
+    """--project-root global flag threads the root through ctx.obj."""
 
     def test_project_root_flag(self, tmp_project: Path, monkeypatch):
-        import os
-
         monkeypatch.chdir(tmp_project)
         monkeypatch.delenv("EIKON_PROJECT_ROOT", raising=False)
         result = runner.invoke(
             app, ["--project-root", str(tmp_project), "registry", "list"]
         )
-        # The CLI callback sets os.environ directly — clean up.
-        os.environ.pop("EIKON_PROJECT_ROOT", None)
         assert result.exit_code == 0
 
     def test_render_uses_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
-        import os
-        # create a figure spec under the project
         spec_path = tmp_project / "specs" / "rooted.yaml"
         spec_path.write_text(
             "name: rooted\npanels:\n  - name: A\n    plot_type: line\n",
@@ -149,19 +143,15 @@ class TestCliProjectRoot:
         elsewhere = tmp_path / "elsewhere"
         elsewhere.mkdir()
         monkeypatch.chdir(elsewhere)
-        try:
-            result = runner.invoke(
-                app,
-                ["--project-root", str(tmp_project), "render", str(spec_path), "-f", "pdf"],
-            )
-        finally:
-            os.environ.pop("EIKON_PROJECT_ROOT", None)
+        result = runner.invoke(
+            app,
+            ["--project-root", str(tmp_project), "render", str(spec_path), "-f", "pdf"],
+        )
 
         assert result.exit_code == 0
         assert (tmp_project / "figures" / "rooted.pdf").exists()
 
     def test_batch_uses_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
-        import os
         spec_path = tmp_project / "specs" / "b1.yaml"
         spec_path.write_text(
             "name: b1\npanels:\n  - name: A\n    plot_type: line\n", encoding="utf-8"
@@ -169,28 +159,21 @@ class TestCliProjectRoot:
         elsewhere = tmp_path / "elsewhere-batch"
         elsewhere.mkdir()
         monkeypatch.chdir(elsewhere)
-        try:
-            result = runner.invoke(
-                app,
-                ["--project-root", str(tmp_project), "batch", "-f", "pdf"],
-            )
-        finally:
-            os.environ.pop("EIKON_PROJECT_ROOT", None)
+        result = runner.invoke(
+            app,
+            ["--project-root", str(tmp_project), "batch", "-f", "pdf"],
+        )
         assert result.exit_code == 0
         assert (tmp_project / "figures" / "b1.pdf").exists()
 
     def test_registry_with_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
-        import os
         elsewhere = tmp_path / "elsewhere-reg"
         elsewhere.mkdir()
         monkeypatch.chdir(elsewhere)
-        try:
-            result = runner.invoke(
-                app,
-                ["--project-root", str(tmp_project), "registry", "list"],
-            )
-        finally:
-            os.environ.pop("EIKON_PROJECT_ROOT", None)
+        result = runner.invoke(
+            app,
+            ["--project-root", str(tmp_project), "registry", "list"],
+        )
         assert result.exit_code == 0
 
 

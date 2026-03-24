@@ -4,18 +4,25 @@ Provides a context manager that acquires an exclusive lock on the
 registry manifest file, preventing partial reads or lost writes when
 multiple processes access the same manifest concurrently.
 
-Uses ``fcntl.flock`` (Unix/macOS).
+Uses ``fcntl.flock`` (Unix/macOS) when available, with a no-op
+fallback on platforms that lack ``fcntl`` (e.g. Windows).
 """
 
 from __future__ import annotations
 
-import fcntl
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
 from eikon.exceptions import RegistryError
+
+try:
+    import fcntl
+
+    _HAS_FCNTL = True
+except ImportError:
+    _HAS_FCNTL = False
 
 __all__ = ["registry_lock"]
 
@@ -48,6 +55,10 @@ def registry_lock(
     RegistryError
         If the lock cannot be acquired within *timeout*.
     """
+    if not _HAS_FCNTL:
+        yield
+        return
+
     lock_path = path.with_suffix(path.suffix + ".lock")
     lock_path.parent.mkdir(parents=True, exist_ok=True)
 
