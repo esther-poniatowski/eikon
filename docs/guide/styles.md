@@ -1,6 +1,6 @@
 # Styles
 
-Eikon's style system provides composable, reusable visual configurations that translate to matplotlib `rcParams`. Styles can be applied per-figure, per-panel, or globally.
+Eikon's style system provides composable, reusable visual settings that translate to matplotlib `rcParams`. Styles can be applied per-figure, per-panel, or globally.
 
 ## StyleSheet
 
@@ -101,7 +101,7 @@ sheet = StyleSheet(
 )
 ```
 
-## Style composition and inheritance
+## Composing and inheriting styles
 
 Styles can extend other styles. Child values override parent values:
 

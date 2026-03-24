@@ -39,7 +39,7 @@ mkdir my-figures && cd my-figures
 eikon init
 ```
 
-This creates:
+This command creates:
 
 ```
 my-figures/
@@ -52,11 +52,11 @@ my-figures/
 
 See the {doc}`CLI reference </guide/cli>` for all `eikon init` options.
 
-## Your first figure
+## A first figure
 
 ### 1. Register a plot type
 
-Every panel needs a plot function. Register one in your Python code:
+Every panel needs a plot function. Register one in a Python module:
 
 ```python
 from eikon.ext import plot_type

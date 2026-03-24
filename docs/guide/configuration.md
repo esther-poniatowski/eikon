@@ -49,7 +49,7 @@ Eikon locates the project root using a three-tier strategy:
 2. **`EIKON_PROJECT_ROOT` environment variable**
 3. **Auto-discovery**: walk upward from the current working directory until `eikon.yaml` is found
 
-This means you can run `eikon` commands from any subdirectory of your project.
+Eikon commands can therefore run from any subdirectory of the project.
 
 ```bash
 # Explicit root

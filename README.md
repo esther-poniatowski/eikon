@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/python-%3E%3D3.12-blue)](https://www.python.org/)
 [![License: GPL](https://img.shields.io/badge/License-GPL--3.0-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 
-Figure management library for programmatic creation, styling, and export of scientific visualizations.
+Figure management library for declarative, reproducible scientific visualizations.
 
 ---
 
@@ -15,14 +15,13 @@ Figure management library for programmatic creation, styling, and export of scie
 ### Motivations
 
 Scientific workflows require reproducible, publication-quality figures with consistent styling across
-analyses. Manual figure management becomes error-prone as the number of panels, conditions, and
+analyses. Managing figures manually becomes error-prone as the number of panels, conditions, and
 output formats grows. Coordinating layout, aesthetics, and export settings across a project demands
 a structured approach.
 
 ### Advantages
 
-Eikon provides a figure management framework for programmatic creation, styling, and export of
-scientific visualizations built on top of matplotlib. Define figures declaratively in YAML, apply
+Eikon manages scientific figures built on Matplotlib: define figures declaratively in YAML, apply
 composable styles, and export to multiple formats with a single command.
 
 ---
@@ -37,9 +36,9 @@ composable styles, and export to multiple formats with a single command.
 - [x] **Layout management**: Compose multi-panel figures with flexible grid specifications,
   shared axes, colorbars, and insets.
 - [x] **Export pipeline**: Batch export figures to PDF, SVG, and PNG with configurable
-  resolution, metadata injection, and filename templates.
+  resolution, injected metadata, and filename templates.
 - [x] **Figure registry**: Track and organize figures across analyses with tags, groups, and
-  a YAML-backed registry manifest.
+  a registry manifest backed by YAML.
 - [x] **Extensibility**: Register custom plot types via decorators, add data transforms,
   and hook into the render/export lifecycle. Plugin discovery via entry points.
 
@@ -77,7 +76,7 @@ pip install -e ".[dev]"
 eikon init
 ```
 
-This creates `eikon.yaml`, `specs/`, `styles/`, `figures/`, and `data/` directories.
+The `init` command creates `eikon.yaml`, `specs/`, `styles/`, `figures/`, and `data/` directories.
 
 ### Write a figure spec
 

@@ -1,6 +1,6 @@
 # Extensions
 
-Eikon is designed to be extensible. You can register custom plot types, data transforms, and lifecycle hooks without modifying eikon's source code.
+Eikon is designed to be extensible. Custom plot types, data transforms, and lifecycle hooks can be registered without modifying eikon's source code.
 
 ## Plot types
 
@@ -95,7 +95,7 @@ clear_transforms()        # Remove all (useful in tests)
 
 ## Lifecycle hooks
 
-Hooks let you inject logic at specific points in the render/export pipeline.
+Hooks inject logic at specific points in the render/export pipeline.
 
 ### Hook points
 
