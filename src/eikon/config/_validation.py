@@ -194,6 +194,9 @@ def validate_figure_spec(raw: dict[str, Any]) -> list[str]:
                     errors.append(f"panels[{i}]: 'name' is required.")
                 if "plot_type" not in panel:
                     errors.append(f"panels[{i}]: 'plot_type' is required.")
+                for axis in ("row", "col"):
+                    if axis in panel:
+                        errors.extend(_validate_panel_index(panel[axis], i, axis))
 
     if "layout" in raw:
         layout = raw["layout"]
@@ -270,3 +273,23 @@ def validate_figure_spec(raw: dict[str, Any]) -> list[str]:
                         )
 
     return errors
+
+
+def _validate_panel_index(value: Any, panel_index: int, axis: str) -> list[str]:
+    """Validate one panel placement axis (row or col)."""
+    label = f"panels[{panel_index}].{axis}"
+    if isinstance(value, int):
+        if value < 0:
+            return [f"{label} must be non-negative."]
+        return []
+    if isinstance(value, (list, tuple)):
+        if len(value) != 2:
+            return [f"{label} must be an integer or a two-item span [start, end]."]
+        if not all(isinstance(item, int) for item in value):
+            return [f"{label} span values must be integers."]
+        if any(item < 0 for item in value):
+            return [f"{label} span values must be non-negative."]
+        if value[1] < value[0]:
+            return [f"{label} span end must be greater than or equal to start."]
+        return []
+    return [f"{label} must be an integer or a two-item span [start, end]."]

@@ -9,6 +9,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
+from eikon.ext._registry import get_default_registry
+
 __all__ = ["HookName", "register_hook", "fire_hook", "clear_hooks"]
 
 type HookFunction = Any
@@ -24,9 +26,6 @@ class HookName(Enum):
     POST_EXPORT = "post_export"
 
 
-_HOOKS: dict[HookName, list[HookFunction]] = {h: [] for h in HookName}
-
-
 def register_hook(hook: HookName, fn: HookFunction) -> None:
     """Register a callback for a lifecycle hook.
 
@@ -37,7 +36,7 @@ def register_hook(hook: HookName, fn: HookFunction) -> None:
     fn : HookFunction
         A callable invoked when the hook fires.
     """
-    _HOOKS[hook].append(fn)
+    get_default_registry().register_hook(hook, fn)
 
 
 def fire_hook(hook: HookName, **kwargs: Any) -> None:
@@ -50,11 +49,12 @@ def fire_hook(hook: HookName, **kwargs: Any) -> None:
     **kwargs : Any
         Context passed to each callback.
     """
-    for fn in _HOOKS[hook]:
-        fn(**kwargs)
+    get_default_registry().fire_hook(hook, **kwargs)
 
 
 def clear_hooks() -> None:
     """Remove all registered hooks.  For testing only."""
+    registry = get_default_registry()
     for hook in HookName:
-        _HOOKS[hook] = []
+        registry.hooks.setdefault(hook, [])
+    registry.clear_hooks()

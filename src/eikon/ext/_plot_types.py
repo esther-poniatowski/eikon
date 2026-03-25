@@ -10,13 +10,11 @@ from collections.abc import Callable
 from typing import TypeVar
 
 from eikon.exceptions import UnknownPlotTypeError
+from eikon.ext._registry import get_default_registry
 
 _F = TypeVar("_F", bound=Callable[..., None])
 
 __all__ = ["register_plot_type", "get_plot_type", "plot_type", "list_plot_types"]
-
-_REGISTRY: dict[str, Callable[..., None]] = {}
-
 
 def register_plot_type(name: str, fn: Callable[..., None]) -> None:
     """Register a plot function under a string key.
@@ -28,7 +26,7 @@ def register_plot_type(name: str, fn: Callable[..., None]) -> None:
     fn : PlotFunction
         A callable matching the :class:`PlotFunction` protocol.
     """
-    _REGISTRY[name] = fn
+    get_default_registry().register_plot_type(name, fn)
 
 
 def get_plot_type(name: str) -> Callable[..., None]:
@@ -49,15 +47,12 @@ def get_plot_type(name: str) -> Callable[..., None]:
     UnknownPlotTypeError
         If no plot type is registered under *name*.
     """
-    fn = _REGISTRY.get(name)
-    if fn is None:
-        raise UnknownPlotTypeError(name, list(_REGISTRY.keys()))
-    return fn
+    return get_default_registry().get_plot_type(name)
 
 
 def list_plot_types() -> list[str]:
     """Return a sorted list of all registered plot type names."""
-    return sorted(_REGISTRY.keys())
+    return get_default_registry().list_plot_types()
 
 
 def plot_type(name: str) -> Callable[[_F], _F]:
@@ -89,4 +84,4 @@ def plot_type(name: str) -> Callable[[_F], _F]:
 
 def _clear_registry() -> None:
     """Clear all registered plot types.  For testing only."""
-    _REGISTRY.clear()
+    get_default_registry().clear_plot_types()

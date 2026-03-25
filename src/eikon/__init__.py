@@ -32,6 +32,7 @@ PackageNotFoundError
 
 import platform
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 
 try:
     if __package__ is None:  # erroneous script execution
@@ -42,6 +43,7 @@ except PackageNotFoundError:
 
 from eikon.config import ProjectConfig, ProjectSession, load_config, resolve_paths  # noqa: E402
 from eikon.config._resolver import ResolvedPaths  # noqa: E402
+from eikon.ext import ExtensionRegistry  # noqa: E402
 from eikon.export import ExportSpec, batch_export  # noqa: E402
 from eikon.layout import BuiltLayout, LayoutSpec, build_layout  # noqa: E402
 from eikon.registry import Registry  # noqa: E402
@@ -118,6 +120,7 @@ def render(
     overrides: dict[str, object] | None = None,
     show: bool = False,
     strict: bool = True,
+    extensions: ExtensionRegistry | None = None,
 ) -> FigureHandle:
     """Convenience function: render a figure by name or spec.
 
@@ -152,8 +155,6 @@ def render(
     FigureHandle
         A handle to the rendered figure.
     """
-    from pathlib import Path
-
     if session is not None:
         sess = session
     elif config is not None or resolved_paths is not None:
@@ -171,7 +172,7 @@ def render(
 
         spec_entry = None
         try:
-            reg = load_registry(config=sess.config)
+            reg = load_registry(config=sess.config, resolved_paths=sess.paths)
             spec_entry = reg.get(name_or_spec)
         except Exception:
             spec_entry = None
@@ -203,10 +204,16 @@ def render(
         formats=formats,
         show=show,
         overrides=dict(overrides) if overrides else {},
+        extensions=extensions,
     )
 
 
-def load_registry(*, config: ProjectConfig | None = None) -> Registry:
+def load_registry(
+    *,
+    config: ProjectConfig | None = None,
+    resolved_paths: ResolvedPaths | None = None,
+    project_root: Path | None = None,
+) -> Registry:
     """Load the project figure registry.
 
     Parameters
@@ -219,10 +226,8 @@ def load_registry(*, config: ProjectConfig | None = None) -> Registry:
     Registry
         A loaded registry instance.
     """
-    from pathlib import Path
-
-    cfg = config or load_config()
-    paths = resolve_paths(cfg.paths)
+    cfg = config or load_config(path=(project_root / "eikon.yaml") if project_root is not None else None)
+    paths = resolved_paths or resolve_paths(cfg.paths, project_root=project_root)
 
     registry_path = cfg.registry_file
     if not Path(registry_path).is_absolute():

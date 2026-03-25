@@ -11,9 +11,10 @@ from typing import Any
 
 from eikon.config._schema import ExportDefaults
 from eikon.exceptions import ExportError
-from eikon.export._config import ExportSpec, resolve_export_config
+from eikon.export._config import ExportSpec, parse_collision_mode, resolve_export_config
 from eikon.export._handlers import export_figure
 from eikon.export._paths import build_export_path
+from eikon.ext._registry import ExtensionRegistry
 from eikon.ext._hooks import HookName, fire_hook
 
 __all__ = ["batch_export"]
@@ -28,6 +29,7 @@ def batch_export(
     export_defaults: ExportDefaults,
     export_spec: ExportSpec | None = None,
     cli_formats: tuple[str, ...] = (),
+    extensions: ExtensionRegistry | None = None,
 ) -> dict[str, Path]:
     """Export a rendered figure to all configured formats.
 
@@ -77,9 +79,15 @@ def batch_export(
                 collision=resolved.collision,
             )
 
-            fire_hook(HookName.PRE_EXPORT, figure=figure, path=path, format=fmt)
+            if extensions is not None:
+                extensions.fire_hook(HookName.PRE_EXPORT, figure=figure, path=path, format=fmt)
+            else:
+                fire_hook(HookName.PRE_EXPORT, figure=figure, path=path, format=fmt)
             export_figure(figure, path, fmt, resolved)
-            fire_hook(HookName.POST_EXPORT, figure=figure, path=path, format=fmt)
+            if extensions is not None:
+                extensions.fire_hook(HookName.POST_EXPORT, figure=figure, path=path, format=fmt)
+            else:
+                fire_hook(HookName.POST_EXPORT, figure=figure, path=path, format=fmt)
 
             paths[fmt.value] = path
         except ExportError:
@@ -119,7 +127,7 @@ def parse_export_spec(raw: dict[str, Any] | None) -> ExportSpec | None:
     if "subdirectory" in raw:
         kwargs["subdirectory"] = str(raw["subdirectory"])
     if "collision" in raw:
-        kwargs["collision"] = str(raw["collision"])
+        kwargs["collision"] = parse_collision_mode(str(raw["collision"]))
     if "metadata" in raw:
         kwargs["metadata"] = dict(raw["metadata"])
 

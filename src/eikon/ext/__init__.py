@@ -12,6 +12,7 @@ from eikon.ext._plot_types import (
     plot_type,
     register_plot_type,
 )
+from eikon.ext._registry import ExtensionRegistry, build_runtime_registry, get_default_registry
 from eikon.ext._transforms import (
     apply_transforms,
     clear_transforms,
@@ -21,9 +22,12 @@ from eikon.ext._transforms import (
 
 __all__ = [
     "HookName",
+    "ExtensionRegistry",
     "clear_hooks",
+    "build_runtime_registry",
     "discover_plugins",
     "fire_hook",
+    "get_default_registry",
     "get_plot_type",
     "list_plot_types",
     "plot_type",

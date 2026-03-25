@@ -17,7 +17,7 @@ def cli_render_by_name(
 ) -> None:
     """Render a figure by registry name."""
     session = ProjectSession.from_config(project_root=get_project_root(ctx))
-    reg = load_registry(config=session.config)
+    reg = load_registry(config=session.config, resolved_paths=session.paths)
 
     entry = reg.get(name)
     raw_path = entry.get("spec_path", "") if isinstance(entry, dict) else ""

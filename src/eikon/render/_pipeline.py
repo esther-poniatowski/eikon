@@ -15,7 +15,7 @@ from eikon.config._resolver import ResolvedPaths
 from eikon.config._schema import ProjectConfig
 from eikon.config._session import ProjectSession
 from eikon.exceptions import RenderError
-from eikon.ext import discover_plugins
+from eikon.ext._registry import ExtensionRegistry, build_runtime_registry
 from eikon.ext._hooks import HookName, fire_hook
 from eikon.layout._builder import BuiltLayout, build_layout
 from eikon.layout._constraints import validate_layout_strict
@@ -104,6 +104,7 @@ def stage_draw_panels(
     style: StyleSheet,
     styles_dir: Path,
     data_dir: Path,
+    extensions: ExtensionRegistry | None = None,
 ) -> None:
     """Draw all panels into their axes, applying per-panel styles."""
     with style_context(style):
@@ -114,9 +115,9 @@ def stage_draw_panels(
             if panel.style is not None:
                 panel_sheet = load_style(panel.style, search_dirs=(styles_dir,))
                 with style_context(panel_sheet):
-                    draw_panel(ax, panel, data_dir=data_dir)
+                    draw_panel(ax, panel, data_dir=data_dir, extensions=extensions)
             else:
-                draw_panel(ax, panel, data_dir=data_dir)
+                draw_panel(ax, panel, data_dir=data_dir, extensions=extensions)
 
 
 def stage_post_process(
@@ -166,6 +167,7 @@ def stage_export(
     output_dir: Path,
     export_defaults: Any,
     cli_formats: tuple[str, ...],
+    extensions: ExtensionRegistry | None = None,
 ) -> dict[str, Path]:
     """Run the export pipeline for the rendered figure."""
     from eikon.export._batch import batch_export
@@ -178,6 +180,7 @@ def stage_export(
         export_defaults=export_defaults,
         export_spec=spec.export,
         cli_formats=cli_formats,
+        extensions=extensions,
     )
 
 
@@ -195,6 +198,7 @@ def render_figure(
     formats: tuple[str, ...] = (),
     show: bool = False,
     overrides: dict[str, Any] | None = None,
+    extensions: ExtensionRegistry | None = None,
 ) -> FigureHandle:
     """Render a figure from its specification — the main pipeline entry point.
 
@@ -226,8 +230,7 @@ def render_figure(
     RenderError
         If any stage of the pipeline fails.
     """
-    import eikon.contrib  # noqa: F401  — register built-in plot types lazily
-    discover_plugins()
+    runtime_extensions = extensions or build_runtime_registry()
 
     if session is not None:
         sess = session
@@ -249,7 +252,7 @@ def render_figure(
             styles_dir=paths.styles_dir,
         )
 
-        fire_hook(HookName.PRE_RENDER, spec=spec, config=cfg)
+        runtime_extensions.fire_hook(HookName.PRE_RENDER, spec=spec, config=cfg)
 
         # Stage 2: Layout building
         figure_size = (
@@ -272,12 +275,13 @@ def render_figure(
             style=resolved_style.sheet,
             styles_dir=paths.styles_dir,
             data_dir=paths.data_dir,
+            extensions=runtime_extensions,
         )
 
         # Stage 4: Post-processing
         stage_post_process(built=resolved_layout.built, spec=spec)
 
-        fire_hook(HookName.POST_RENDER, spec=spec, layout=resolved_layout.built)
+        runtime_extensions.fire_hook(HookName.POST_RENDER, spec=spec, layout=resolved_layout.built)
     except Exception as exc:
         if not isinstance(exc, RenderError):
             msg = f"Rendering failed for {spec.name!r}: {exc}"
@@ -299,6 +303,7 @@ def render_figure(
                 output_dir=paths.output_dir,
                 export_defaults=cfg.export,
                 cli_formats=formats,
+                extensions=runtime_extensions,
             )
             handle.export_paths = export_paths
         except Exception as exc:

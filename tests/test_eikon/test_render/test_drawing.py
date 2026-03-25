@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from eikon.ext._plot_types import _clear_registry, register_plot_type
+from eikon.ext._registry import ExtensionRegistry
 from eikon.render._drawing import draw_all_panels, draw_panel
 from eikon.spec._panel import PanelSpec
 
@@ -40,6 +41,14 @@ class TestDrawPanel:
         panel = PanelSpec(name="A", plot_type="bare")
         draw_panel(ax, panel, data_dir=tmp_path)
         fn.assert_called_once_with(ax)
+
+    def test_explicit_registry_isolated_from_global_state(self, tmp_path: Path) -> None:
+        fn = MagicMock()
+        registry = ExtensionRegistry(plot_types={"isolated": fn})
+        ax = MagicMock()
+        panel = PanelSpec(name="A", plot_type="isolated", params={"color": "blue"})
+        draw_panel(ax, panel, data_dir=tmp_path, extensions=registry)
+        fn.assert_called_once_with(ax, color="blue")
 
 
 class TestDrawAllPanels:

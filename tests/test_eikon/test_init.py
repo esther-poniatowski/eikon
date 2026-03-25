@@ -94,3 +94,13 @@ class TestLoadRegistry:
 
         reg2 = load_registry()
         assert "fig1" in reg2
+
+    def test_load_registry_uses_explicit_project_root(
+        self,
+        tmp_project: Path,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        reg = load_registry(project_root=tmp_project)
+        assert reg.path == tmp_project / "eikon-registry.yaml"

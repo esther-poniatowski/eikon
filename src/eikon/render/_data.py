@@ -15,12 +15,18 @@ from typing import Any
 
 from eikon.exceptions import RenderError
 from eikon.ext._transforms import apply_transforms
+from eikon.ext._registry import ExtensionRegistry
 from eikon.spec._data import DataBinding
 
 __all__ = ["resolve_data_binding"]
 
 
-def resolve_data_binding(binding: DataBinding, data_dir: Path) -> dict[str, Any]:
+def resolve_data_binding(
+    binding: DataBinding,
+    data_dir: Path,
+    *,
+    extensions: ExtensionRegistry | None = None,
+) -> dict[str, Any]:
     """Load data for a panel and return kwargs for the plot function.
 
     Returns a dict containing at least ``data`` (the loaded table-like
@@ -39,7 +45,10 @@ def resolve_data_binding(binding: DataBinding, data_dir: Path) -> dict[str, Any]
         raise RenderError(f"Data source not found: {source_path}")
 
     data_obj = _load_table(source_path)
-    data_obj = apply_transforms(data_obj, binding.transforms)
+    if extensions is not None:
+        data_obj = extensions.apply_transforms(data_obj, binding.transforms)
+    else:
+        data_obj = apply_transforms(data_obj, binding.transforms)
 
     kwargs: dict[str, Any] = {"data": data_obj}
 

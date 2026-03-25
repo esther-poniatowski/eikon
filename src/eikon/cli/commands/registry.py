@@ -14,9 +14,7 @@ app = typer.Typer(add_completion=False, help="Manage the figure registry")
 
 def _load_reg(project_root: Path | None = None) -> Registry:
     session = ProjectSession.from_config(project_root=project_root)
-    reg = load_registry(config=session.config)
-    reg.path = session.paths.project_root / session.config.registry_file
-    return reg
+    return load_registry(config=session.config, resolved_paths=session.paths)
 
 
 @app.command("list")

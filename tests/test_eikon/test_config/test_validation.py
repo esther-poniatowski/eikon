@@ -69,3 +69,10 @@ class TestValidateFigureSpec:
             "layout": {"rows": 0, "cols": 1},
         })
         assert any("rows" in e for e in errors)
+
+    def test_invalid_panel_span_shape(self):
+        errors = validate_figure_spec({
+            "name": "fig",
+            "panels": [{"name": "A", "plot_type": "line", "row": [0], "col": 0}],
+        })
+        assert any("two-item span" in e for e in errors)

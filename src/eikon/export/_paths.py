@@ -12,6 +12,7 @@ from pathlib import Path
 
 from eikon._types import ExportFormat
 from eikon.exceptions import ExportError
+from eikon.export._config import CollisionMode, parse_collision_mode
 from eikon.export._sanitize import sanitize_filename
 
 __all__ = ["build_export_path"]
@@ -25,7 +26,7 @@ def build_export_path(
     filename_template: str = "{name}",
     subdirectory: str = "",
     group: str = "",
-    collision: str = "overwrite",
+    collision: CollisionMode | str = CollisionMode.OVERWRITE,
 ) -> Path:
     """Build the export file path for a single format.
 
@@ -63,6 +64,7 @@ def build_export_path(
         If ``collision="fail"`` and the target path already exists.
     """
     extension = fmt.value
+    collision_mode = parse_collision_mode(collision)
 
     stem = filename_template.format(
         name=sanitize_filename(name),
@@ -78,11 +80,11 @@ def build_export_path(
 
     path = directory / f"{stem}.{extension}"
 
-    if collision == "fail" and path.exists():
+    if collision_mode is CollisionMode.FAIL and path.exists():
         msg = f"Export path already exists and collision='fail': {path}"
         raise ExportError(msg)
 
-    if collision == "increment" and path.exists():
+    if collision_mode is CollisionMode.INCREMENT and path.exists():
         path = _increment_path(path)
 
     return path

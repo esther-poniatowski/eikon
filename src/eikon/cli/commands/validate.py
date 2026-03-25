@@ -8,6 +8,11 @@ from eikon.config._validation import validate_config, validate_figure_spec
 
 def cli_validate(
     target: str = typer.Argument(..., help="Path to eikon.yaml or a figure spec YAML file."),
+    kind: str = typer.Option(
+        "auto",
+        "--kind",
+        help="Validation target kind: auto, config, or figure.",
+    ),
 ) -> None:
     """Validate config or figure spec YAML."""
     target_path = Path(target).resolve()
@@ -25,7 +30,14 @@ def cli_validate(
         typer.echo(f"Expected a YAML mapping, got {type(raw).__name__}.", err=True)
         raise typer.Exit(code=1)
 
-    if target_path.name == "eikon.yaml" or "paths" in raw or "export" in raw:
+    normalized_kind = kind.strip().lower()
+    if normalized_kind not in {"auto", "config", "figure"}:
+        typer.echo(f"Invalid validation kind: {kind}", err=True)
+        raise typer.Exit(code=1)
+
+    if normalized_kind == "config" or (
+        normalized_kind == "auto" and target_path.name == "eikon.yaml"
+    ):
         errors = validate_config(raw)
         kind = "Configuration"
     else:

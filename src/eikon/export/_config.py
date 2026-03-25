@@ -9,12 +9,38 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from enum import StrEnum
 
 from eikon._types import ExportFormat
 from eikon.config._schema import ExportDefaults
 
-__all__ = ["ExportSpec", "ResolvedExportConfig", "resolve_export_config"]
+__all__ = [
+    "CollisionMode",
+    "ExportSpec",
+    "ResolvedExportConfig",
+    "parse_collision_mode",
+    "resolve_export_config",
+]
+
+
+class CollisionMode(StrEnum):
+    """Closed set of export collision policies."""
+
+    OVERWRITE = "overwrite"
+    INCREMENT = "increment"
+    FAIL = "fail"
+
+
+def parse_collision_mode(value: str | CollisionMode) -> CollisionMode:
+    """Normalize and validate a collision policy value."""
+    if isinstance(value, CollisionMode):
+        return value
+    normalized = str(value).strip().lower()
+    try:
+        return CollisionMode(normalized)
+    except ValueError as exc:
+        valid = ", ".join(mode.value for mode in CollisionMode)
+        raise ValueError(f"Unknown collision mode {value!r}. Expected one of: {valid}.") from exc
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -47,7 +73,7 @@ class ExportSpec:
     transparent: bool | None = None
     filename_template: str | None = None
     subdirectory: str | None = None
-    collision: Literal["overwrite", "increment", "fail"] | None = None
+    collision: CollisionMode | None = None
     metadata: dict[str, str] | None = None
 
 
@@ -84,7 +110,7 @@ class ResolvedExportConfig:
     pad_inches: float
     filename_template: str
     subdirectory: str
-    collision: str
+    collision: CollisionMode
     metadata: dict[str, str] = field(default_factory=dict)
 
 
@@ -131,6 +157,6 @@ def resolve_export_config(
         pad_inches=defaults.pad_inches,
         filename_template=override.filename_template or "{name}",
         subdirectory=override.subdirectory or "",
-        collision=override.collision or "overwrite",
+        collision=parse_collision_mode(override.collision or CollisionMode.OVERWRITE),
         metadata={**defaults.metadata, **(override.metadata or {})},
     )

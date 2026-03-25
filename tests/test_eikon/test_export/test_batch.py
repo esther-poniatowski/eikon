@@ -109,6 +109,10 @@ class TestParseExportSpec:
         assert spec is not None
         assert spec.collision == "increment"
 
+    def test_invalid_collision_rejected(self) -> None:
+        with pytest.raises(ValueError, match="Unknown collision mode"):
+            parse_export_spec({"collision": "incremement"})
+
     def test_metadata_parsed(self) -> None:
         spec = parse_export_spec({"metadata": {"Author": "Test"}})
         assert spec is not None

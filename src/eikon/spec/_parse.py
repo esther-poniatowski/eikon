@@ -11,7 +11,7 @@ import yaml
 
 from eikon.config._validation import validate_figure_spec
 from eikon.exceptions import ConfigError, SpecValidationError
-from eikon.export._config import ExportSpec
+from eikon.export._config import ExportSpec, parse_collision_mode
 from eikon.layout._grid import LayoutSpec
 from eikon.spec._data import DataBinding
 from eikon.spec._figure import FigureSpec, SharedLegendConfig, TitleConfig
@@ -280,7 +280,7 @@ def _build_export_spec(raw: dict[str, Any]) -> ExportSpec:
     if "subdirectory" in raw:
         kwargs["subdirectory"] = str(raw["subdirectory"])
     if "collision" in raw:
-        kwargs["collision"] = str(raw["collision"])
+        kwargs["collision"] = parse_collision_mode(str(raw["collision"]))
     if "metadata" in raw:
         kwargs["metadata"] = dict(raw["metadata"])
     return ExportSpec(**kwargs)
