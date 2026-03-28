@@ -18,7 +18,7 @@ authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 readme = {file = "README.md", content-type = "text/markdown"}
-description = "Figure management library for programmatic creation, styling, and export of scientific visualizations"
+description = "Defines and exports Matplotlib figures declaratively for reproducible scientific visualizations."
 keywords = ["figures", "visualization", "matplotlib", "scientific-computing", "plotting"]
 classifiers = [
     "Programming Language :: Python :: 3",

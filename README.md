@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/python-%3E%3D3.12-blue)](https://www.python.org/)
 [![License: GPL](https://img.shields.io/badge/License-GPL--3.0-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 
-Figure management library for declarative, reproducible scientific visualizations.
+Defines and exports Matplotlib figures declaratively for reproducible scientific visualizations.
 
 ---
 
