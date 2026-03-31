@@ -1,20 +1,14 @@
 # Eikon
 
-**Figure management library for programmatically creating, styling, and exporting scientific visualizations.**
-
-Eikon provides a structured workflow for building publication-quality figures on top of [matplotlib](https://matplotlib.org/). Define figures declaratively in YAML, apply composable styles, and export to multiple formats with a single command.
-
----
-
-## User Guide
-
-Step-by-step tutorials covering how to install, configure, and use all major features.
+Defines and exports Matplotlib figures declaratively for reproducible scientific
+visualizations.
 
 ```{toctree}
 :maxdepth: 2
 :caption: User Guide
 
-guide/getting-started
+guide/installation
+guide/usage
 guide/configuration
 guide/specifications
 guide/styles
@@ -25,10 +19,6 @@ guide/registry
 guide/cli
 guide/extensions
 ```
-
-## API Reference
-
-Complete reference for all public classes, functions, and protocols.
 
 ```{toctree}
 :maxdepth: 2

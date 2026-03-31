@@ -1,208 +1,129 @@
 # Eikon
 
-[![Conda](https://img.shields.io/badge/conda-eresthanaconda--channel-blue)](#installation)
+[![Conda](https://img.shields.io/badge/conda-eresthanaconda--channel-blue)](docs/guide/installation.md)
 [![Maintenance](https://img.shields.io/maintenance/yes/2026)]()
 [![Last Commit](https://img.shields.io/github/last-commit/esther-poniatowski/eikon)](https://github.com/esther-poniatowski/eikon/commits/main)
-[![Python](https://img.shields.io/badge/python-%3E%3D3.12-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-%E2%89%A53.12-blue)](https://www.python.org/)
 [![License: GPL](https://img.shields.io/badge/License-GPL--3.0-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 
-Defines and exports Matplotlib figures declaratively for reproducible scientific visualizations.
+Defines and exports Matplotlib figures declaratively for reproducible scientific
+visualizations.
 
 ---
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+
 ## Overview
 
-### Motivations
+### Motivation
 
-Scientific workflows require reproducible, publication-quality figures with consistent styling across
-analyses. Managing figures manually becomes error-prone as the number of panels, conditions, and
-output formats grows. Coordinating layout, aesthetics, and export settings across a project demands
-a structured approach.
+Scientific workflows require reproducible, publication-quality figures with consistent
+styling across analyses. Managing figures manually becomes error-prone as the number of
+panels, conditions, and output formats grows.
 
 ### Advantages
 
-Eikon manages scientific figures built on Matplotlib: define figures declaratively in YAML, apply
-composable styles, and export to multiple formats with a single command.
+- **Declarative specifications** — figures, panels, and export settings are defined as
+  structured YAML objects.
+- **Composable styling** — built-in presets (publication, presentation, poster) and
+  custom YAML style sheets compose freely.
+- **Batch export** — render to PDF, SVG, and PNG with configurable resolution, metadata
+  injection, and filename templates.
+- **Extensibility** — custom plot types register via decorators; data transforms and
+  lifecycle hooks extend the pipeline through entry points.
 
 ---
 
 ## Features
 
-- [x] **Declarative figure specifications**: Define figures as structured objects with layout,
-  styling, and export settings in YAML or Python.
-- [x] **Data binding**: Specify data sources, column mappings, and reusable transforms for each panel.
-- [x] **Consistent styling**: Apply composable style sheets with built-in presets
-  (publication, presentation, poster) and custom YAML styles.
-- [x] **Layout management**: Compose multi-panel figures with flexible grid specifications,
-  shared axes, colorbars, and insets.
-- [x] **Export pipeline**: Batch export figures to PDF, SVG, and PNG with configurable
-  resolution, injected metadata, and filename templates.
-- [x] **Figure registry**: Track and organize figures across analyses with tags, groups, and
-  a registry manifest backed by YAML.
+- [x] **Declarative figure specifications**: Define figures with layout, styling, and
+  export settings in YAML or Python.
+- [x] **Data binding**: Specify data sources, column mappings, and reusable transforms
+  for each panel.
+- [x] **Consistent styling**: Apply composable style sheets with built-in presets and
+  custom YAML styles.
+- [x] **Layout management**: Compose multi-panel figures with flexible grids, shared
+  axes, colorbars, and insets.
+- [x] **Export pipeline**: Batch export to PDF, SVG, and PNG with configurable
+  resolution, metadata, and filename templates.
+- [x] **Figure registry**: Track and organize figures across analyses with tags, groups,
+  and a YAML registry manifest.
 - [x] **Extensibility**: Register custom plot types via decorators, add data transforms,
-  and hook into the render/export lifecycle. Plugin discovery via entry points.
-
----
-
-## Installation
-
-### Using pip
-
-```bash
-pip install git+https://github.com/esther-poniatowski/eikon.git
-```
-
-### From source
-
-```bash
-git clone https://github.com/esther-poniatowski/eikon.git
-cd eikon
-pip install -e .
-```
-
-For development tools:
-
-```bash
-pip install -e ".[dev]"
-```
+  and hook into the render/export lifecycle.
 
 ---
 
 ## Quick Start
 
-### Initialize a project
+Initialize a project:
 
-```bash
+```sh
 eikon init
 ```
 
-The `init` command creates `eikon.yaml`, `specs/`, `styles/`, `figures/`, and `data/` directories.
+Render a figure:
 
-### Write a figure spec
-
-Create `specs/example.yaml`:
-
-```yaml
-name: example
-title: "Example Figure"
-panels:
-  - name: A
-    plot_type: line
-    params:
-      color: blue
-layout:
-  rows: 1
-  cols: 1
-style: publication
-export:
-  formats: [pdf, svg]
-  dpi: 300
-```
-
-### Render from the CLI
-
-```bash
+```sh
 eikon render specs/example.yaml --format pdf --format svg
-```
-
-### Render from Python
-
-```python
-import eikon
-
-handle = eikon.render("example", formats=("pdf", "svg"))
-print(handle.export_paths)
-handle.close()
-```
-
----
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `EIKON_PROJECT_ROOT` | Explicit project root directory | Auto-discovered | No |
-
-### Configuration File
-
-Project settings are specified in `eikon.yaml` at the project root:
-
-```yaml
-paths:
-  output_dir: figures
-  styles_dir: styles
-  specs_dir: specs
-  data_dir: data
-
-export:
-  formats: [pdf]
-  dpi: 300
-  transparent: false
-  metadata:
-    author: "Author Name"
-
-style:
-  base_style: default
-  font_family: serif
-  font_size: 10.0
-  figure_size: [6.4, 4.8]
-
-registry_file: eikon-registry.yaml
 ```
 
 ---
 
 ## Documentation
 
-- [User Guide](docs/guide/) — Getting started, configuration, specifications, styles, layouts,
-  rendering, export, registry, CLI, and extensions.
-- [API Reference](docs/api/) — Complete reference for all public classes, functions, and protocols.
+| Guide | Content |
+| ----- | ------- |
+| [Installation](docs/guide/installation.md) | Prerequisites, pip/source setup |
+| [Usage](docs/guide/usage.md) | Project setup, figure specs, rendering, export, registry |
+| [Configuration](docs/guide/configuration.md) | `eikon.yaml` settings, paths, export defaults |
+| [Specifications](docs/guide/specifications.md) | Figure and panel spec reference |
+| [Styles](docs/guide/styles.md) | Style sheets, presets, composition |
+| [Layouts](docs/guide/layouts.md) | Grid layouts, shared axes, colorbars, insets |
+| [Rendering](docs/guide/rendering.md) | Render pipeline and Python API |
+| [Export](docs/guide/export.md) | Formats, resolution, metadata |
+| [Registry](docs/guide/registry.md) | Figure tracking and organization |
+| [CLI Reference](docs/guide/cli.md) | Full command registry and options |
+| [Extensions](docs/guide/extensions.md) | Custom plot types, transforms, hooks |
 
-To build the docs locally:
-
-```bash
-pip install -e ".[docs]"
-cd docs && make html
-open _build/html/index.html
-```
-
-### Data transform registry
-
-Register reusable data-processing steps and reference them by name in YAML specs:
-
-- `eikon.ext.register_transform(name, fn)` — add a transform callable.
-- `eikon.ext.list_transforms()` — list registered transforms.
-- `eikon.ext.clear_transforms()` — clear all transforms (useful for tests or long-running sessions).
+Full API documentation and rendered guides are also available at
+[esther-poniatowski.github.io/eikon](https://esther-poniatowski.github.io/eikon/).
 
 ---
 
-## Support
+## Contributing
 
-**Issues**: [GitHub Issues](https://github.com/esther-poniatowski/eikon/issues)
+Contribution guidelines are described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
 ## Acknowledgments
 
-### Authors & Contributors
+### Authors
 
 **Author**: @esther-poniatowski
 
-For academic use, please cite using the GitHub "Cite this repository" feature to
-generate a citation in various formats.
+For academic use, the GitHub "Cite this repository" feature generates citations in
+various formats. The [citation metadata](CITATION.cff) file is also available.
 
 ### Third-Party Dependencies
 
-- **[Matplotlib](https://matplotlib.org/)** — Plotting library
-- **[NumPy](https://numpy.org/)** — Array operations
-- **[PyYAML](https://pyyaml.org/)** — YAML parsing
-- **[Typer](https://typer.tiangolo.com/)** — CLI framework
-- **[Rich](https://rich.readthedocs.io/)** — Terminal formatting
+- **[Matplotlib](https://matplotlib.org/)** — Plotting library.
+- **[NumPy](https://numpy.org/)** — Array operations.
+- **[PyYAML](https://pyyaml.org/)** — YAML parsing.
+- **[Typer](https://typer.tiangolo.com/)** — CLI framework.
+- **[Rich](https://rich.readthedocs.io/)** — Terminal formatting.
 
 ---
 
 ## License
 
-This project is licensed under the terms of the [GNU General Public License v3.0](LICENSE).
+This project is licensed under the terms of the
+[GNU General Public License v3.0](LICENSE).
