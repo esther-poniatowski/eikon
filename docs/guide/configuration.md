@@ -13,6 +13,8 @@ The main configuration file is `eikon.yaml`, placed at the project root. Run `ei
 ### Full schema
 
 ```yaml
+config_version: 1
+
 # Directory paths (relative to the project root)
 paths:
   output_dir: figures       # Where exported figures are saved
@@ -25,13 +27,15 @@ export:
   formats: [pdf]            # Default formats: pdf, svg, png
   dpi: 300                  # Resolution in dots per inch
   transparent: false        # Transparent background
-  metadata:                 # Metadata injected into exported files
+  bbox_inches: tight        # Bounding box setting for savefig
+  pad_inches: 0.1           # Padding when bbox_inches is tight
+  metadata:                 # Metadata embedded in exported files
     author: "Author Name"
 
 # Default style settings
 style:
   base_style: default       # Matplotlib style or eikon preset
-  font_family: serif
+  font_family: sans-serif
   font_size: 10.0
   figure_size: [6.4, 4.8]  # Width x height in inches
 
@@ -92,6 +96,7 @@ All configuration sections are frozen, keyword-only dataclasses:
 | `PathsConfig` | `output_dir`, `styles_dir`, `specs_dir`, `data_dir` | Directory layout |
 | `ExportDefaults` | `formats`, `dpi`, `transparent`, `bbox_inches`, `pad_inches`, `metadata` | Export settings |
 | `StyleDefaults` | `base_style`, `font_family`, `font_size`, `figure_size` | Style settings |
+| `ProjectSession` | `config`, `paths` | Bundled config + resolved paths |
 | `ResolvedPaths` | `project_root`, `output_dir`, `styles_dir`, `specs_dir`, `data_dir` | Absolute paths |
 
 See the {doc}`/api/config` for complete field documentation.

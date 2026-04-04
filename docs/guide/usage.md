@@ -108,7 +108,7 @@ layout:
 
 ## Applying Consistent Styling
 
-Composable style sheets control the visual appearance across figures:
+Composable style sheets control how figures look:
 
 ```yaml
 style: publication
@@ -120,8 +120,8 @@ styles are defined as YAML files in the `styles/` directory. See
 
 ## Batch Export
 
-The export pipeline supports multiple formats, resolution settings, and metadata
-injection in a single invocation:
+The export pipeline supports multiple formats, resolution settings, and embedded
+metadata in a single invocation:
 
 ```sh
 eikon render specs/ --format pdf --format svg --format png

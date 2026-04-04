@@ -20,12 +20,15 @@ Create a new eikon project with default configuration and directory structure.
 
 ```bash
 eikon init
+eikon init /path/to/project
 eikon init --project-root /path/to/project
 ```
 
+Accepts an optional positional `path` argument (defaults to `.`).
+
 Creates:
 - `eikon.yaml` — Project configuration file
-- `specs/` — Directory for figure specifications (with an example spec)
+- `specs/` — Directory for figure specifications (with two example specs)
 - `styles/` — Directory for custom style files
 - `figures/` — Output directory for exported figures
 - `data/` — Directory for data sources
@@ -37,7 +40,12 @@ Validate a configuration or figure spec YAML file.
 ```bash
 eikon validate eikon.yaml
 eikon validate specs/fig1.yaml
+eikon validate specs/fig1.yaml --kind figure
 ```
+
+Options:
+
+- `--kind` — Validation target kind: `auto` (default), `config`, or `figure`. In `auto` mode, files named `eikon.yaml` are validated as config; all others are validated as figure specs.
 
 Outputs validation results with Rich formatting. Returns exit code 1 on validation errors.
 
@@ -121,7 +129,14 @@ Manage the figure registry. This is a command group with subcommands.
 eikon registry list
 eikon registry list --tag neural
 eikon registry list --group manuscript-1
+eikon registry list --tag neural --tag overview --match-all
 ```
+
+Options:
+
+- `--tag`, `-t` — Filter by tag (repeatable)
+- `--group`, `-g` — Filter by group
+- `--match-all` — Require all tags to match (default: any)
 
 #### `eikon registry add`
 
@@ -133,6 +148,7 @@ eikon registry add fig1 --spec-path specs/fig1.yaml
 Options:
 - `--tag`, `-t` — Tags (repeatable)
 - `--group`, `-g` — Group name
+- `--on-conflict` — Conflict strategy: `update` (default), `fail`, or `skip`
 - `--spec-path` — Path to the figure spec file
 
 #### `eikon registry remove`
@@ -147,4 +163,4 @@ eikon registry remove fig1
 eikon registry show fig1
 ```
 
-Displays the full registry entry as formatted YAML.
+Displays the full registry entry as formatted JSON.
