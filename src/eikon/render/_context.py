@@ -22,31 +22,21 @@ __all__ = ["RenderContext"]
 @dataclass(kw_only=True, slots=True)
 class RenderContext:
     """Mutable state for a single render pass.
-
-    Attributes
-    ----------
-    spec : FigureSpec
-        The figure specification being rendered.
-    config : ProjectConfig
-        The resolved project configuration.
-    style : StyleSheet | None
-        The resolved style sheet (set during style resolution).
-    layout : BuiltLayout | None
-        The built layout (set during layout building).
-    export_formats : tuple[str, ...]
-        Formats to export (empty = no export).
-    show : bool
-        Whether to display the figure interactively after rendering.
-    overrides : dict[str, Any]
-        Per-call keyword overrides.
     """
 
     spec: FigureSpec
+    """The figure specification being rendered."""
     config: ProjectConfig
+    """The resolved project configuration."""
     paths: ResolvedPaths
     style: StyleSheet | None = None
+    """The resolved style sheet (set during style resolution)."""
     layout: BuiltLayout | None = None
+    """The built layout (set during layout building)."""
     export_formats: tuple[str, ...] = ()
+    """Formats to export (empty = no export)."""
     show: bool = False
+    """Whether to display the figure interactively after rendering."""
     overrides: dict[str, Any] = field(default_factory=dict)
+    """Per-call keyword overrides."""
     data: dict[str, dict[str, Any]] = field(default_factory=dict)

@@ -18,23 +18,16 @@ __all__ = ["FigureHandle"]
 @dataclass(kw_only=True, slots=True)
 class FigureHandle:
     """Result of rendering a figure.
-
-    Attributes
-    ----------
-    spec : Any
-        The :class:`FigureSpec` that was rendered.
-    figure : Any
-        The matplotlib ``Figure`` object.
-    axes : dict[str, Any]
-        Panel-name-to-``Axes`` mapping.
-    export_paths : dict[str, Path]
-        Format-to-path mapping of exported files (empty if not exported).
     """
 
     spec: Any
+    """The :class:`FigureSpec` that was rendered."""
     figure: Any
+    """The matplotlib ``Figure`` object."""
     axes: dict[str, Any] = field(default_factory=dict)
+    """Panel-name-to-``Axes`` mapping."""
     export_paths: dict[str, Path] = field(default_factory=dict)
+    """Format-to-path mapping of exported files (empty if not exported)."""
 
     def show(self) -> None:
         """Display the figure interactively via ``plt.show()``."""

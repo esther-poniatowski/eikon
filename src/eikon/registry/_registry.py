@@ -24,11 +24,6 @@ class Registry:
     ----------
     path : Path
         Path to the YAML manifest file.
-
-    Attributes
-    ----------
-    path : Path
-        Manifest file path.
     """
 
     def __init__(self, path: Path) -> None:
@@ -66,15 +61,14 @@ class Registry:
             Organizational tags.
         group : str
             Grouping key (e.g. ``"manuscript-1"``).
-            metadata : dict[str, str], optional
-                Arbitrary metadata fields.
-            on_conflict : {"update", "fail", "skip"}
-                How to handle duplicate names.
-                - ``"update"`` (default) — replace the existing entry.
-                - ``"fail"`` — raise ``RegistryError``.
-                - ``"skip"`` — keep the existing entry.
-            spec_path : str, optional
-                Path to the figure specification YAML file (relative or absolute).
+        metadata : dict[str, str], optional
+            Arbitrary metadata fields.
+        on_conflict : {"update", "fail", "skip"}
+            How to handle duplicate names. ``"update"`` replaces the existing
+            entry, ``"fail"`` raises ``RegistryError``, and ``"skip"`` keeps
+            the existing entry.
+        spec_path : str, optional
+            Path to the figure specification YAML file.
 
         Raises
         ------

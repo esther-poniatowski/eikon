@@ -20,20 +20,14 @@ __all__ = ["PanelPlacement", "resolve_placements"]
 @dataclass(frozen=True, kw_only=True, slots=True)
 class PanelPlacement:
     """Resolved position of a panel within the grid.
-
-    Attributes
-    ----------
-    panel_name : str
-        Name of the panel this placement belongs to.
-    row_slice : slice
-        Row span as a ``slice`` for ``GridSpec`` subscripting.
-    col_slice : slice
-        Column span as a ``slice`` for ``GridSpec`` subscripting.
     """
 
     panel_name: str
+    """Name of the panel this placement belongs to."""
     row_slice: slice
+    """Row span as a ``slice`` for ``GridSpec`` subscripting."""
     col_slice: slice
+    """Column span as a ``slice`` for ``GridSpec`` subscripting."""
 
 
 def resolve_placements(

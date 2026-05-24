@@ -26,17 +26,12 @@ __all__ = ["BuiltLayout", "build_layout"]
 @dataclass(frozen=True, kw_only=True, slots=True)
 class BuiltLayout:
     """Result of building a layout: a Figure and its named Axes.
-
-    Attributes
-    ----------
-    figure : Figure
-        The matplotlib Figure object.
-    axes : dict[str, Axes]
-        Mapping from panel names to their Axes objects.
     """
 
     figure: Figure
+    """The matplotlib Figure object."""
     axes: dict[str, Any]  # dict[str, Axes] — Any for frozen dataclass compat
+    """Mapping from panel names to their Axes objects."""
     grid_spec: Any  # GridSpec — Any for frozen dataclass compat
 
 

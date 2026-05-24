@@ -48,70 +48,49 @@ class ExportSpec:
     """Per-figure export overrides.
 
     Any ``None`` field inherits the project-level default.
-
-    Attributes
-    ----------
-    formats : tuple[str, ...] | None
-        Format names (e.g. ``("pdf", "svg")``).
-    dpi : int | None
-        Resolution in dots per inch.
-    transparent : bool | None
-        Export with transparent background.
-    filename_template : str | None
-        Template for output filename.  Variables: ``{name}``, ``{group}``,
-        ``{date}``, ``{format}``.
-    subdirectory : str | None
-        Subdirectory under the output dir (e.g. a group folder).
-    collision : Literal["overwrite", "increment", "fail"] | None
-        How to handle existing files at the export path.
-    metadata : dict[str, str] | None
-        Additional metadata to inject into exported files.
     """
 
     formats: tuple[str, ...] | None = None
+    """Format names (e.g. ``("pdf", "svg")``)."""
     dpi: int | None = None
+    """Resolution in dots per inch."""
     transparent: bool | None = None
+    """Export with transparent background."""
     filename_template: str | None = None
+    """Template for output filename.  Variables: ``{name}``, ``{group}``,
+    ``{date}``, ``{format}``.
+    """
     subdirectory: str | None = None
+    """Subdirectory under the output dir (e.g. a group folder)."""
     collision: CollisionMode | None = None
+    """How to handle existing files at the export path."""
     metadata: dict[str, str] | None = None
+    """Additional metadata to inject into exported files."""
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class ResolvedExportConfig:
     """Fully resolved export configuration — no optional fields.
-
-    Attributes
-    ----------
-    formats : tuple[ExportFormat, ...]
-        Export file formats.
-    dpi : int
-        Resolution in dots per inch.
-    transparent : bool
-        Transparent background flag.
-    bbox_inches : str
-        Bounding box setting for ``savefig``.
-    pad_inches : float
-        Padding around the figure.
-    filename_template : str
-        Template for output filenames.
-    subdirectory : str
-        Subdirectory under the output dir.
-    collision : str
-        Collision strategy: ``"overwrite"``, ``"increment"``, or ``"fail"``.
-    metadata : dict[str, str]
-        Metadata injected into exported files.
     """
 
     formats: tuple[ExportFormat, ...]
+    """Export file formats."""
     dpi: int
+    """Resolution in dots per inch."""
     transparent: bool
+    """Transparent background flag."""
     bbox_inches: str
+    """Bounding box setting for ``savefig``."""
     pad_inches: float
+    """Padding around the figure."""
     filename_template: str
+    """Template for output filenames."""
     subdirectory: str
+    """Subdirectory under the output dir."""
     collision: CollisionMode
+    """Collision strategy: ``"overwrite"``, ``"increment"``, or ``"fail"``."""
     metadata: dict[str, str] = field(default_factory=dict)
+    """Metadata injected into exported files."""
 
 
 def resolve_export_config(

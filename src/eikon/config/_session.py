@@ -21,17 +21,12 @@ __all__ = ["ProjectSession"]
 @dataclass(frozen=True, slots=True)
 class ProjectSession:
     """Bundled project configuration and resolved paths.
-
-    Attributes
-    ----------
-    config : ProjectConfig
-        The validated project configuration.
-    paths : ResolvedPaths
-        Fully resolved, absolute paths for the project.
     """
 
     config: ProjectConfig
+    """The validated project configuration."""
     paths: ResolvedPaths
+    """Fully resolved, absolute paths for the project."""
 
     @classmethod
     def from_config(

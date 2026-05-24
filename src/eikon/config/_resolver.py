@@ -31,26 +31,18 @@ class ResolvedPaths:
     Once constructed, the resolved root is cached on this object and
     never re-computed — preventing cross-project bleed when the working
     directory changes during execution.
-
-    Attributes
-    ----------
-    project_root : Path
-        Absolute path to the project root directory.
-    output_dir : Path
-        Absolute path to the figure output directory.
-    styles_dir : Path
-        Absolute path to the styles directory.
-    specs_dir : Path
-        Absolute path to the figure specs directory.
-    data_dir : Path
-        Absolute path to the data directory.
     """
 
     project_root: Path
+    """Absolute path to the project root directory."""
     output_dir: Path
+    """Absolute path to the figure output directory."""
     styles_dir: Path
+    """Absolute path to the styles directory."""
     specs_dir: Path
+    """Absolute path to the figure specs directory."""
     data_dir: Path
+    """Absolute path to the data directory."""
 
 
 def discover_project_root(start: Path | None = None) -> Path:
