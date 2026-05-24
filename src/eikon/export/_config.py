@@ -57,7 +57,7 @@ class ExportSpec:
     transparent: bool | None = None
     """Export with transparent background."""
     filename_template: str | None = None
-    """Template for output filename.  Variables: ``{name}``, ``{group}``,
+    """Template for output filename using ``{name}``, ``{group}``,
     ``{date}``, ``{format}``.
     """
     subdirectory: str | None = None
@@ -88,7 +88,7 @@ class ResolvedExportConfig:
     subdirectory: str
     """Subdirectory under the output dir."""
     collision: CollisionMode
-    """Collision strategy: ``"overwrite"``, ``"increment"``, or ``"fail"``."""
+    """Collision policy, either ``"overwrite"``, ``"increment"``, or ``"fail"``."""
     metadata: dict[str, str] = field(default_factory=dict)
     """Metadata injected into exported files."""
 

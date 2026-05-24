@@ -18,9 +18,6 @@ targets for re-exported classes.
 
 Format diagnostic information on package and platform.
 
-* **Return type:**
-  [str](https://docs.python.org/3/library/stdtypes.html#str)
-
 <a id="eikon.render"></a>
 
 ### eikon.render(name_or_spec, \*, config=None, resolved_paths=None, session=None, formats=(), overrides=None, show=False, strict=True, extensions=None)
@@ -43,7 +40,6 @@ file path via the project config’s specs directory).
   * **show** ([*bool*](https://docs.python.org/3/library/functions.html#bool)) – Whether to display the figure interactively.
   * **strict** ([*bool*](https://docs.python.org/3/library/functions.html#bool)) – If `True` (default), let config/path errors propagate.
     If `False`, fall back to built-in defaults.
-  * **extensions** ([*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry) *|* *None*)
 * **Returns:**
   A handle to the rendered figure.
 * **Return type:**
@@ -87,8 +83,6 @@ Parse a format string (case-insensitive) into an ExportFormat.
   **value** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – Format name, e.g. `"pdf"`, `"PNG"`.
 * **Raises:**
   [**ValueError**](https://docs.python.org/3/library/exceptions.html#ValueError) – If the string does not match any known format.
-* **Return type:**
-  [*ExportFormat*](#eikon._types.ExportFormat)
 
 <a id="module-eikon.exceptions"></a>
 
@@ -125,11 +119,6 @@ Bases: [`ConfigError`](#eikon.exceptions.ConfigError)
 
 No `eikon.yaml` found in the project hierarchy.
 
-* **Parameters:**
-  **search_root** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-* **Return type:**
-  None
-
 <a id="eikon.exceptions.ConfigValidationError"></a>
 
 ### *exception* eikon.exceptions.ConfigValidationError(errors)
@@ -140,8 +129,6 @@ Schema validation failure with detailed messages.
 
 * **Parameters:**
   **errors** ([*list*](https://docs.python.org/3/library/stdtypes.html#list) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*) – Individual validation error messages.
-* **Return type:**
-  None
 
 <a id="eikon.exceptions.SpecError"></a>
 
@@ -161,8 +148,6 @@ Invalid figure specification.
 
 * **Parameters:**
   **errors** ([*list*](https://docs.python.org/3/library/stdtypes.html#list) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*) – Individual validation error messages.
-* **Return type:**
-  None
 
 <a id="eikon.exceptions.StyleError"></a>
 
@@ -182,8 +167,6 @@ Referenced style could not be found.
 
 * **Parameters:**
   **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – The style name or path that was not found.
-* **Return type:**
-  None
 
 <a id="eikon.exceptions.LayoutError"></a>
 
@@ -204,8 +187,6 @@ Two panels occupy the same grid cells.
 * **Parameters:**
   * **panel_a** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – Name of the first overlapping panel.
   * **panel_b** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – Name of the second overlapping panel.
-* **Return type:**
-  None
 
 <a id="eikon.exceptions.RenderError"></a>
 
@@ -226,8 +207,6 @@ Referenced plot type is not registered.
 * **Parameters:**
   * **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – The unrecognized plot type name.
   * **available** ([*list*](https://docs.python.org/3/library/stdtypes.html#list) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*) – Currently registered plot type names.
-* **Return type:**
-  None
 
 <a id="eikon.exceptions.ExportError"></a>
 
@@ -265,12 +244,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Configurable directory paths, stored relative to the project root.
 
-* **Parameters:**
-  * **output_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **styles_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **specs_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **data_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-
 <a id="eikon.config._schema.PathsConfig.output_dir"></a>
 
 #### output_dir *: [Path](https://docs.python.org/3/library/pathlib.html#pathlib.Path)*
@@ -302,14 +275,6 @@ Directory containing data sources for figures.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Default export settings applied to all figures unless overridden.
-
-* **Parameters:**
-  * **formats** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*ExportFormat*](#eikon._types.ExportFormat) *,*  *...* *]*)
-  * **dpi** ([*int*](https://docs.python.org/3/library/functions.html#int))
-  * **transparent** ([*bool*](https://docs.python.org/3/library/functions.html#bool))
-  * **bbox_inches** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **pad_inches** ([*float*](https://docs.python.org/3/library/functions.html#float))
-  * **metadata** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*)
 
 <a id="eikon.config._schema.ExportDefaults.formats"></a>
 
@@ -355,12 +320,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Default style settings applied to all figures unless overridden.
 
-* **Parameters:**
-  * **base_style** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **font_family** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **font_size** ([*float*](https://docs.python.org/3/library/functions.html#float))
-  * **figure_size** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*float*](https://docs.python.org/3/library/functions.html#float) *,* [*float*](https://docs.python.org/3/library/functions.html#float) *]*)
-
 <a id="eikon.config._schema.StyleDefaults.base_style"></a>
 
 #### base_style *: [str](https://docs.python.org/3/library/stdtypes.html#str)*
@@ -392,12 +351,6 @@ Default figure dimensions `(width, height)` in inches.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Top-level project configuration, composed from section dataclasses.
-
-* **Parameters:**
-  * **paths** ([*PathsConfig*](#eikon.config._schema.PathsConfig))
-  * **export** ([*ExportDefaults*](#eikon.config._schema.ExportDefaults))
-  * **style** ([*StyleDefaults*](#eikon.config._schema.StyleDefaults))
-  * **registry_file** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
 
 <a id="eikon.config._schema.ProjectConfig.paths"></a>
 
@@ -495,13 +448,6 @@ Once constructed, the resolved root is cached on this object and
 never re-computed — preventing cross-project bleed when the working
 directory changes during execution.
 
-* **Parameters:**
-  * **project_root** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **output_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **styles_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **specs_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **data_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-
 <a id="eikon.config._resolver.ResolvedPaths.project_root"></a>
 
 #### project_root *: [Path](https://docs.python.org/3/library/pathlib.html#pathlib.Path)*
@@ -593,10 +539,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Bundled project configuration and resolved paths.
 
-* **Parameters:**
-  * **config** ([*ProjectConfig*](#eikon.config._schema.ProjectConfig))
-  * **paths** ([*ResolvedPaths*](#eikon.config._resolver.ResolvedPaths))
-
 <a id="eikon.config._session.ProjectSession.config"></a>
 
 #### config *: [ProjectConfig](#eikon.config._schema.ProjectConfig)*
@@ -686,20 +628,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Declarative specification for a single figure.
 
-* **Parameters:**
-  * **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **title** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **tags** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[**Tag* *,*  *...* *]*)
-  * **group** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **panels** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*PanelSpec*](#eikon.spec._panel.PanelSpec) *,*  *...* *]*)
-  * **layout** ([*LayoutSpec*](#eikon.layout._grid.LayoutSpec) *|* *None*)
-  * **style** (*StyleRef* *|* *None*)
-  * **export** ([*ExportSpec*](#eikon.export._config.ExportSpec) *|* *None*)
-  * **title_kwargs** ([*TitleConfig*](#eikon.spec._figure.TitleConfig) *|* *None*)
-  * **shared_legend** ([*SharedLegendConfig*](#eikon.spec._figure.SharedLegendConfig) *|* *None*)
-  * **margin_labels** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*MarginLabelSpec*](#eikon.spec._margin_labels.MarginLabelSpec) *]*  *|* *None*)
-  * **metadata** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*)
-
 <a id="eikon.spec._figure.FigureSpec.name"></a>
 
 #### name *: [str](https://docs.python.org/3/library/stdtypes.html#str)*
@@ -785,14 +713,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Keyword arguments forwarded to `matplotlib.figure.Figure.suptitle()`.
 
-* **Parameters:**
-  * **fontsize** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* *None*)
-  * **fontweight** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **y** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* *None*)
-  * **x** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* *None*)
-  * **ha** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **extra** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-
 <a id="eikon.spec._figure.TitleConfig.fontsize"></a>
 
 #### fontsize *: [float](https://docs.python.org/3/library/functions.html#float) | [None](https://docs.python.org/3/library/constants.html#None)*
@@ -835,9 +755,6 @@ Additional keyword arguments forwarded verbatim.
 
 Return a dict suitable for `fig.suptitle(**kwargs)`.
 
-* **Return type:**
-  [dict](https://docs.python.org/3/library/stdtypes.html#dict)[[str](https://docs.python.org/3/library/stdtypes.html#str), [*Any*](https://docs.python.org/3/library/typing.html#typing.Any)]
-
 <a id="eikon.spec._figure.SharedLegendConfig"></a>
 
 ### *class* eikon.spec._figure.SharedLegendConfig(\*, loc=None, ncol=None, fontsize=None, frameon=None, extra=<factory>)
@@ -845,13 +762,6 @@ Return a dict suitable for `fig.suptitle(**kwargs)`.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Configuration for a shared figure-level legend.
-
-* **Parameters:**
-  * **loc** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **ncol** ([*int*](https://docs.python.org/3/library/functions.html#int) *|* *None*)
-  * **fontsize** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* [*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **frameon** ([*bool*](https://docs.python.org/3/library/functions.html#bool) *|* *None*)
-  * **extra** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
 
 <a id="eikon.spec._figure.SharedLegendConfig.loc"></a>
 
@@ -889,9 +799,6 @@ Additional keyword arguments forwarded verbatim.
 
 Return a dict suitable for `fig.legend(**kwargs)`.
 
-* **Return type:**
-  [dict](https://docs.python.org/3/library/stdtypes.html#dict)[[str](https://docs.python.org/3/library/stdtypes.html#str), [*Any*](https://docs.python.org/3/library/typing.html#typing.Any)]
-
 <a id="module-eikon.spec._panel"></a>
 
 <a id="panel-specifications"></a>
@@ -910,18 +817,6 @@ in the grid layout, data binding, and per-panel style overrides.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Specification for one axes panel within a figure.
-
-* **Parameters:**
-  * **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **plot_type** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **data** ([*DataBinding*](#eikon.spec._data.DataBinding) *|* *None*)
-  * **row** ([*int*](https://docs.python.org/3/library/functions.html#int) *|* [*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*int*](https://docs.python.org/3/library/functions.html#int) *,* [*int*](https://docs.python.org/3/library/functions.html#int) *]*)
-  * **col** ([*int*](https://docs.python.org/3/library/functions.html#int) *|* [*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*int*](https://docs.python.org/3/library/functions.html#int) *,* [*int*](https://docs.python.org/3/library/functions.html#int) *]*)
-  * **style** (*StyleRef* *|* *None*)
-  * **params** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-  * **label** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **auto_size** ([*bool*](https://docs.python.org/3/library/functions.html#bool))
-  * **hide_spines** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*  *|* *None*)
 
 <a id="eikon.spec._panel.PanelSpec.name"></a>
 
@@ -1006,14 +901,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Reference to data for a panel.
 
-* **Parameters:**
-  * **source** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* [*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **x** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **y** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **hue** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **transforms** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*)
-  * **params** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-
 <a id="eikon.spec._data.DataBinding.source"></a>
 
 #### source *: [str](https://docs.python.org/3/library/stdtypes.html#str) | [Path](https://docs.python.org/3/library/pathlib.html#pathlib.Path)*
@@ -1068,18 +955,6 @@ of a panel grid (or a virtual inset grid within a single panel).
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Specification for labels on one edge of the figure.
-
-* **Parameters:**
-  * **labels** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*  *|* [*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-  * **style** ([*MarginLabelStyle*](#eikon.spec._margin_labels.MarginLabelStyle))
-  * **level_styles** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*MarginLabelStyle*](#eikon.spec._margin_labels.MarginLabelStyle) *,*  *...* *]*  *|* *None*)
-  * **target** ([*MarginTarget*](#eikon.spec._margin_labels.MarginTarget))
-  * **strip_size** ([*float*](https://docs.python.org/3/library/functions.html#float))
-  * **pad** ([*float*](https://docs.python.org/3/library/functions.html#float))
-  * **gap** ([*float*](https://docs.python.org/3/library/functions.html#float))
-  * **zorder** ([*float*](https://docs.python.org/3/library/functions.html#float))
-  * **label_styles** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*MarginLabelStyle*](#eikon.spec._margin_labels.MarginLabelStyle) *]*  *|* *None*)
-  * **cell_range** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*int*](https://docs.python.org/3/library/functions.html#int) *,* [*int*](https://docs.python.org/3/library/functions.html#int) *]*  *|* *None*)
 
 <a id="eikon.spec._margin_labels.MarginLabelSpec.labels"></a>
 
@@ -1158,13 +1033,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Visual style for margin label text and optional background strip.
 
-* **Parameters:**
-  * **bg_color** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **text_color** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **fontsize** ([*float*](https://docs.python.org/3/library/functions.html#float))
-  * **fontweight** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **rotation** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* *None*)
-
 <a id="eikon.spec._margin_labels.MarginLabelStyle.bg_color"></a>
 
 #### bg_color *: [str](https://docs.python.org/3/library/stdtypes.html#str) | [None](https://docs.python.org/3/library/constants.html#None)*
@@ -1208,11 +1076,6 @@ For `kind="layout"` (the default), labels align to the figure’s
 GridSpec cells.  For `kind="virtual"`, labels subdivide a single
 panel’s axes evenly — useful for inset grids drawn inside plot
 functions.
-
-* **Parameters:**
-  * **kind** ([*Literal*](https://docs.python.org/3/library/typing.html#typing.Literal) *[* *'layout'* *,*  *'virtual'* *]*)
-  * **axes** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **grid** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*int*](https://docs.python.org/3/library/functions.html#int) *,* [*int*](https://docs.python.org/3/library/functions.html#int) *]*  *|* *None*)
 
 <a id="eikon.spec._margin_labels.MarginTarget.kind"></a>
 
@@ -1337,16 +1200,6 @@ can extend other sheets via `extends`, enabling inheritance chains.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Composable style definition for figures.
-
-* **Parameters:**
-  * **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **font_family** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **font_size** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* *None*)
-  * **line_width** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* *None*)
-  * **palette** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*  *|* *None*)
-  * **figure_size** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*float*](https://docs.python.org/3/library/functions.html#float) *,* [*float*](https://docs.python.org/3/library/functions.html#float) *]*  *|* *None*)
-  * **rc_overrides** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*object*](https://docs.python.org/3/library/functions.html#object) *]*)
-  * **extends** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*)
 
 <a id="eikon.style._sheet.StyleSheet.name"></a>
 
@@ -1497,11 +1350,6 @@ Three presets are provided out of the box:
 
 Return a built-in preset by name, or `None` if not found.
 
-* **Parameters:**
-  **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-* **Return type:**
-  [*StyleSheet*](#eikon.style._sheet.StyleSheet) | None
-
 <a id="module-eikon.style._rcparams"></a>
 
 <a id="matplotlib-parameters"></a>
@@ -1547,8 +1395,6 @@ calls correctly restore the outer state.
     `rcParams` directly outside the context manager.
 * **Yields:**
   *None*
-* **Return type:**
-  Generator[None]
 
 <a id="module-eikon.layout._grid"></a>
 
@@ -1568,15 +1414,6 @@ multi-panel figure: number of rows/columns, size ratios, and spacing.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Declarative specification for a figure’s grid layout.
-
-* **Parameters:**
-  * **rows** ([*int*](https://docs.python.org/3/library/functions.html#int))
-  * **cols** ([*int*](https://docs.python.org/3/library/functions.html#int))
-  * **width_ratios** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*float*](https://docs.python.org/3/library/functions.html#float) *,*  *...* *]*  *|* *None*)
-  * **height_ratios** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*float*](https://docs.python.org/3/library/functions.html#float) *,*  *...* *]*  *|* *None*)
-  * **wspace** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* *None*)
-  * **hspace** ([*float*](https://docs.python.org/3/library/functions.html#float) *|* *None*)
-  * **constrained_layout** ([*bool*](https://docs.python.org/3/library/functions.html#bool))
 
 <a id="eikon.layout._grid.LayoutSpec.rows"></a>
 
@@ -1640,11 +1477,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Resolved position of a panel within the grid.
 
-* **Parameters:**
-  * **panel_name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **row_slice** ([*slice*](https://docs.python.org/3/library/functions.html#slice))
-  * **col_slice** ([*slice*](https://docs.python.org/3/library/functions.html#slice))
-
 <a id="eikon.layout._placement.PanelPlacement.panel_name"></a>
 
 #### panel_name *: [str](https://docs.python.org/3/library/stdtypes.html#str)*
@@ -1697,11 +1529,6 @@ panel.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Result of building a layout: a Figure and its named Axes.
-
-* **Parameters:**
-  * **figure** (*Figure*)
-  * **axes** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-  * **grid_spec** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any))
 
 <a id="eikon.layout._builder.BuiltLayout.figure"></a>
 
@@ -1796,8 +1623,6 @@ subsequent panels share its x-axis, y-axis, or both.
   * **axis** (`"x"` | `"y"` | `"both"`) – Which axis to share.
 * **Raises:**
   [**LayoutError**](#eikon.exceptions.LayoutError) – If a panel name is not found in the built layout.
-* **Return type:**
-  None
 
 <a id="module-eikon.layout._colorbars"></a>
 
@@ -1825,7 +1650,7 @@ Uses `fig.colorbar` which is compatible with constrained layout.
   * **position** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – Location: `"right"`, `"left"`, `"top"`, or `"bottom"`.
   * **size** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – Colorbar width as a percentage string (e.g. `"5%"`).
   * **pad** ([*float*](https://docs.python.org/3/library/functions.html#float)) – Padding between the axes and colorbar.
-  * **\*\*kwargs** – Additional keyword arguments passed to `fig.colorbar`.
+  * **\*\*kwargs** (*Any*) – Additional keyword arguments passed to `fig.colorbar`.
 * **Returns:**
   The created matplotlib colorbar.
 * **Return type:**
@@ -1934,12 +1759,6 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Result of rendering a figure.
 
-* **Parameters:**
-  * **spec** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any))
-  * **figure** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any))
-  * **axes** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-  * **export_paths** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path) *]*)
-
 <a id="eikon.render._handle.FigureHandle.spec"></a>
 
 #### spec *: [Any](https://docs.python.org/3/library/typing.html#typing.Any)*
@@ -1970,9 +1789,6 @@ Format-to-path mapping of exported files (empty if not exported).
 
 Display the figure interactively via `plt.show()`.
 
-* **Return type:**
-  None
-
 <a id="eikon.render._handle.FigureHandle.path"></a>
 
 #### path(fmt)
@@ -1981,8 +1797,6 @@ Return the export path for a given format, or `None`.
 
 * **Parameters:**
   **fmt** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – Export format key (e.g. `"pdf"`, `"svg"`).
-* **Return type:**
-  [*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | None
 
 <a id="eikon.render._handle.FigureHandle.save"></a>
 
@@ -1997,7 +1811,7 @@ Save the figure to a file and optionally close it.
   * **bbox_inches** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – Bounding-box option forwarded to
     `matplotlib.figure.Figure.savefig()`.
   * **close** ([*bool*](https://docs.python.org/3/library/functions.html#bool)) – Whether to close the figure after saving (default `True`).
-  * **\*\*kwargs** – Extra keyword arguments forwarded to `savefig`.
+  * **\*\*kwargs** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any)) – Extra keyword arguments forwarded to `savefig`.
 * **Returns:**
   The resolved output path.
 * **Return type:**
@@ -2008,9 +1822,6 @@ Save the figure to a file and optionally close it.
 #### close()
 
 Close the matplotlib Figure to free memory.
-
-* **Return type:**
-  None
 
 <a id="module-eikon.render._context"></a>
 
@@ -2031,17 +1842,6 @@ public API.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Mutable state for a single render pass.
-
-* **Parameters:**
-  * **spec** ([*FigureSpec*](#eikon.spec._figure.FigureSpec))
-  * **config** ([*ProjectConfig*](#eikon.config._schema.ProjectConfig))
-  * **paths** ([*ResolvedPaths*](#eikon.config._resolver.ResolvedPaths))
-  * **style** ([*StyleSheet*](#eikon.style._sheet.StyleSheet) *|* *None*)
-  * **layout** ([*BuiltLayout*](#eikon.layout._builder.BuiltLayout) *|* *None*)
-  * **export_formats** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*)
-  * **show** ([*bool*](https://docs.python.org/3/library/functions.html#bool))
-  * **overrides** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-  * **data** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]* *]*)
 
 <a id="eikon.render._context.RenderContext.spec"></a>
 
@@ -2117,13 +1917,6 @@ Returns a dict containing at least `data` (the loaded table-like
 object) plus `x`/`y`/`hue` keys when the binding specifies
 corresponding columns.
 
-* **Parameters:**
-  * **binding** ([*DataBinding*](#eikon.spec._data.DataBinding))
-  * **data_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **extensions** ([*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry) *|* *None*)
-* **Return type:**
-  [dict](https://docs.python.org/3/library/stdtypes.html#dict)[[str](https://docs.python.org/3/library/stdtypes.html#str), [*Any*](https://docs.python.org/3/library/typing.html#typing.Any)]
-
 <a id="module-eikon.render._drawing"></a>
 
 <a id="drawing"></a>
@@ -2145,12 +1938,8 @@ Draw a single panel using its registered plot function.
 * **Parameters:**
   * **ax** (*Axes*) – The matplotlib Axes to draw into.
   * **panel** ([*PanelSpec*](#eikon.spec._panel.PanelSpec)) – The panel specification containing plot_type and params.
-  * **data_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **extensions** ([*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry) *|* *None*)
 * **Raises:**
   [**UnknownPlotTypeError**](#eikon.exceptions.UnknownPlotTypeError) – If the panel’s `plot_type` is not registered.
-* **Return type:**
-  None
 
 <a id="eikon.render._drawing.draw_all_panels"></a>
 
@@ -2161,10 +1950,6 @@ Draw all panels into their corresponding axes.
 * **Parameters:**
   * **axes** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* *Axes* *]*) – Panel-name-to-Axes mapping from `BuiltLayout`.
   * **panels** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*PanelSpec*](#eikon.spec._panel.PanelSpec) *,*  *...* *]*) – Panel specifications to draw.
-  * **data_dir** ([*Path*](https://docs.python.org/3/library/pathlib.html#pathlib.Path))
-  * **extensions** ([*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry) *|* *None*)
-* **Return type:**
-  None
 
 <a id="module-eikon.render._pipeline"></a>
 
@@ -2193,7 +1978,6 @@ Render a figure from its specification — the main pipeline entry point.
   * **formats** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*) – Export format names (e.g. `("pdf", "svg")`).  Empty = no export.
   * **show** ([*bool*](https://docs.python.org/3/library/functions.html#bool)) – Whether to display the figure interactively after rendering.
   * **overrides** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* *Any* *]* *,* *optional*) – Per-call keyword overrides forwarded to the pipeline.
-  * **extensions** ([*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry) *|* *None*)
 * **Returns:**
   A handle to the rendered figure.
 * **Return type:**
@@ -2222,8 +2006,6 @@ Render margin labels on the figure.
   * **fig** (*Figure*) – The matplotlib figure to draw on.
   * **built** ([*BuiltLayout*](#eikon.layout._builder.BuiltLayout)) – The built layout (provides `grid_spec` and `axes`).
   * **margin_labels** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*MarginLabelSpec*](#eikon.spec._margin_labels.MarginLabelSpec) *]*) – Mapping from edge name to label spec.
-* **Return type:**
-  None
 
 <a id="module-eikon.export._config"></a>
 
@@ -2268,15 +2050,6 @@ Per-figure export overrides.
 
 Any `None` field inherits the project-level default.
 
-* **Parameters:**
-  * **formats** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*  *|* *None*)
-  * **dpi** ([*int*](https://docs.python.org/3/library/functions.html#int) *|* *None*)
-  * **transparent** ([*bool*](https://docs.python.org/3/library/functions.html#bool) *|* *None*)
-  * **filename_template** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **subdirectory** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* *None*)
-  * **collision** ([*CollisionMode*](#eikon.export._config.CollisionMode) *|* *None*)
-  * **metadata** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*  *|* *None*)
-
 <a id="eikon.export._config.ExportSpec.formats"></a>
 
 #### formats *: [tuple](https://docs.python.org/3/library/stdtypes.html#tuple)[[str](https://docs.python.org/3/library/stdtypes.html#str), ...] | [None](https://docs.python.org/3/library/constants.html#None)*
@@ -2299,11 +2072,8 @@ Export with transparent background.
 
 #### filename_template *: [str](https://docs.python.org/3/library/stdtypes.html#str) | [None](https://docs.python.org/3/library/constants.html#None)*
 
-`{name}`, `{group}`,
+Template for output filename using `{name}`, `{group}`,
 `{date}`, `{format}`.
-
-* **Type:**
-  Template for output filename.  Variables
 
 <a id="eikon.export._config.ExportSpec.subdirectory"></a>
 
@@ -2330,17 +2100,6 @@ Additional metadata to inject into exported files.
 Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Fully resolved export configuration — no optional fields.
-
-* **Parameters:**
-  * **formats** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*ExportFormat*](#eikon._types.ExportFormat) *,*  *...* *]*)
-  * **dpi** ([*int*](https://docs.python.org/3/library/functions.html#int))
-  * **transparent** ([*bool*](https://docs.python.org/3/library/functions.html#bool))
-  * **bbox_inches** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **pad_inches** ([*float*](https://docs.python.org/3/library/functions.html#float))
-  * **filename_template** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **subdirectory** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **collision** ([*CollisionMode*](#eikon.export._config.CollisionMode))
-  * **metadata** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*)
 
 <a id="eikon.export._config.ResolvedExportConfig.formats"></a>
 
@@ -2388,10 +2147,7 @@ Subdirectory under the output dir.
 
 #### collision *: [CollisionMode](#eikon.export._config.CollisionMode)*
 
-`"overwrite"`, `"increment"`, or `"fail"`.
-
-* **Type:**
-  Collision strategy
+Collision policy, either `"overwrite"`, `"increment"`, or `"fail"`.
 
 <a id="eikon.export._config.ResolvedExportConfig.metadata"></a>
 
@@ -2404,11 +2160,6 @@ Metadata injected into exported files.
 ### eikon.export._config.parse_collision_mode(value)
 
 Normalize and validate a collision policy value.
-
-* **Parameters:**
-  **value** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *|* [*CollisionMode*](#eikon.export._config.CollisionMode))
-* **Return type:**
-  [*CollisionMode*](#eikon.export._config.CollisionMode)
 
 <a id="eikon.export._config.resolve_export_config"></a>
 
@@ -2450,7 +2201,6 @@ Export a rendered figure to all configured formats.
   * **export_defaults** ([*ExportDefaults*](#eikon.config._schema.ExportDefaults)) – Project-level export settings.
   * **export_spec** ([*ExportSpec*](#eikon.export._config.ExportSpec) *,* *optional*) – Per-figure export overrides.
   * **cli_formats** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*) – Format names from CLI flags (highest priority).
-  * **extensions** ([*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry) *|* *None*)
 * **Returns:**
   Mapping of format name (lowercase) to exported file path.
 * **Return type:**
@@ -2480,8 +2230,6 @@ Export a figure to a file using the appropriate handler.
   * **path** (*Path*) – Output file path.
   * **fmt** ([*ExportFormat*](#eikon._types.ExportFormat)) – Export format.
   * **config** ([*ResolvedExportConfig*](#eikon.export._config.ResolvedExportConfig)) – Resolved export settings.
-* **Return type:**
-  None
 
 <a id="eikon.export._handlers.get_handler"></a>
 
@@ -2513,8 +2261,6 @@ formats (after adding the format to `ExportFormat`).
 * **Parameters:**
   * **fmt** ([*ExportFormat*](#eikon._types.ExportFormat)) – The export format to register the handler for.
   * **handler** (*Callable*) – A callable with signature `(figure, path, config) -> None`.
-* **Return type:**
-  None
 
 <a id="module-eikon.export._metadata"></a>
 
@@ -2544,8 +2290,6 @@ file.  If the file does not exist or metadata is empty, this is a no-op.
 * **Parameters:**
   * **path** (*Path*) – Path to the PDF file.
   * **metadata** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*) – Key-value metadata pairs (e.g. `{"Author": "Name"}`).
-* **Return type:**
-  None
 
 <a id="eikon.export._metadata.inject_png_metadata"></a>
 
@@ -2559,8 +2303,6 @@ or metadata is empty, this is a no-op.
 * **Parameters:**
   * **path** (*Path*) – Path to the PNG file.
   * **metadata** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*str*](https://docs.python.org/3/library/stdtypes.html#str) *]*) – Key-value metadata pairs.
-* **Return type:**
-  None
 
 ### Notes
 
@@ -2666,17 +2408,11 @@ Load entries from the manifest file.
 
 If the file does not exist, the registry starts empty.
 
-* **Return type:**
-  None
-
 <a id="eikon.registry._registry.Registry.save"></a>
 
 #### save()
 
 Persist current entries to the manifest file.
-
-* **Return type:**
-  None
 
 <a id="eikon.registry._registry.Registry.register"></a>
 
@@ -2695,8 +2431,6 @@ Register a figure in the registry.
   * **spec_path** ([*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* *optional*) – Path to the figure specification YAML file.
 * **Raises:**
   [**RegistryError**](#eikon.exceptions.RegistryError) – If `on_conflict="fail"` and the name already exists.
-* **Return type:**
-  None
 
 <a id="eikon.registry._registry.Registry.get"></a>
 
@@ -2723,17 +2457,12 @@ Remove a figure from the registry.
   **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – Figure name.
 * **Raises:**
   [**RegistryError**](#eikon.exceptions.RegistryError) – If the name is not registered.
-* **Return type:**
-  None
 
 <a id="eikon.registry._registry.Registry.list_all"></a>
 
 #### list_all()
 
 Return a sorted list of all registered figure names.
-
-* **Return type:**
-  [list](https://docs.python.org/3/library/stdtypes.html#list)[[str](https://docs.python.org/3/library/stdtypes.html#str)]
 
 <a id="eikon.registry._registry.Registry.query"></a>
 
@@ -2786,8 +2515,6 @@ Save the registry manifest to a YAML file.
 * **Parameters:**
   * **path** (*Path*) – Path to the manifest file.
   * **entries** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* [*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* *Any* *]* *]*) – Mapping of figure names to their registry entries.
-* **Return type:**
-  None
 
 <a id="module-eikon.registry._query"></a>
 
@@ -2874,8 +2601,6 @@ Acquire an exclusive advisory lock on a file.
   *None* – Control while the lock is held.
 * **Raises:**
   [**RegistryError**](#eikon.exceptions.RegistryError) – If the lock cannot be acquired within *timeout*.
-* **Return type:**
-  [*Generator*](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)[None]
 
 <a id="module-eikon.ext._registry"></a>
 
@@ -2893,111 +2618,53 @@ Bases: [`object`](https://docs.python.org/3/library/functions.html#object)
 
 Container for plot types, hooks, and transforms.
 
-* **Parameters:**
-  * **plot_types** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* *Callable* *[* *...* *,* *None* *]* *]*  *|* *None*)
-  * **hooks** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[**Any* *,* [*list*](https://docs.python.org/3/library/stdtypes.html#list) *[**Callable* *[* *...* *,* *Any* *]* *]* *]*  *|* *None*)
-  * **transforms** ([*dict*](https://docs.python.org/3/library/stdtypes.html#dict) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,* *Callable* *[* *[**Any* *]* *,* *Any* *]* *]*  *|* *None*)
-
 <a id="eikon.ext._registry.ExtensionRegistry.clone"></a>
 
 #### clone()
-
-* **Return type:**
-  [*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry)
 
 <a id="eikon.ext._registry.ExtensionRegistry.register_plot_type"></a>
 
 #### register_plot_type(name, fn)
 
-* **Parameters:**
-  * **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **fn** ([*Callable*](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable) *[* *[* *...* *]* *,* *None* *]*)
-* **Return type:**
-  None
-
 <a id="eikon.ext._registry.ExtensionRegistry.get_plot_type"></a>
 
 #### get_plot_type(name)
-
-* **Parameters:**
-  **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-* **Return type:**
-  [*Callable*](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[…], None]
 
 <a id="eikon.ext._registry.ExtensionRegistry.list_plot_types"></a>
 
 #### list_plot_types()
 
-* **Return type:**
-  [list](https://docs.python.org/3/library/stdtypes.html#list)[[str](https://docs.python.org/3/library/stdtypes.html#str)]
-
 <a id="eikon.ext._registry.ExtensionRegistry.clear_plot_types"></a>
 
 #### clear_plot_types()
-
-* **Return type:**
-  None
 
 <a id="eikon.ext._registry.ExtensionRegistry.register_hook"></a>
 
 #### register_hook(hook, fn)
 
-* **Parameters:**
-  * **hook** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any))
-  * **fn** ([*Callable*](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable) *[* *[* *...* *]* *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-* **Return type:**
-  None
-
 <a id="eikon.ext._registry.ExtensionRegistry.fire_hook"></a>
 
 #### fire_hook(hook, \*\*kwargs)
-
-* **Parameters:**
-  * **hook** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any))
-  * **kwargs** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any))
-* **Return type:**
-  None
 
 <a id="eikon.ext._registry.ExtensionRegistry.clear_hooks"></a>
 
 #### clear_hooks()
 
-* **Return type:**
-  None
-
 <a id="eikon.ext._registry.ExtensionRegistry.register_transform"></a>
 
 #### register_transform(name, fn)
-
-* **Parameters:**
-  * **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **fn** ([*Callable*](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable) *[* *[*[*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]* *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-* **Return type:**
-  None
 
 <a id="eikon.ext._registry.ExtensionRegistry.list_transforms"></a>
 
 #### list_transforms()
 
-* **Return type:**
-  [list](https://docs.python.org/3/library/stdtypes.html#list)[[str](https://docs.python.org/3/library/stdtypes.html#str)]
-
 <a id="eikon.ext._registry.ExtensionRegistry.clear_transforms"></a>
 
 #### clear_transforms()
 
-* **Return type:**
-  None
-
 <a id="eikon.ext._registry.ExtensionRegistry.apply_transforms"></a>
 
 #### apply_transforms(data, names)
-
-* **Parameters:**
-  * **data** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any))
-  * **names** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*)
-* **Return type:**
-  [*Any*](https://docs.python.org/3/library/typing.html#typing.Any)
 
 <a id="eikon.ext._registry.build_runtime_registry"></a>
 
@@ -3005,17 +2672,11 @@ Container for plot types, hooks, and transforms.
 
 Return a bootstrapped snapshot for one render/runtime session.
 
-* **Return type:**
-  [*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry)
-
 <a id="eikon.ext._registry.get_default_registry"></a>
 
 ### eikon.ext._registry.get_default_registry()
 
 Return the mutable process-local default registry.
-
-* **Return type:**
-  [*ExtensionRegistry*](#eikon.ext._registry.ExtensionRegistry)
 
 <a id="module-eikon.ext._plot_types"></a>
 
@@ -3037,8 +2698,6 @@ Register a plot function under a string key.
 * **Parameters:**
   * **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str)) – The plot type name (e.g. `"line"`, `"scatter"`).
   * **fn** ([*PlotFunction*](#eikon.render._protocols.PlotFunction)) – A callable matching the `PlotFunction` protocol.
-* **Return type:**
-  None
 
 <a id="eikon.ext._plot_types.get_plot_type"></a>
 
@@ -3082,9 +2741,6 @@ def draw_line(ax, /, **kwargs):
 
 Return a sorted list of all registered plot type names.
 
-* **Return type:**
-  [list](https://docs.python.org/3/library/stdtypes.html#list)[[str](https://docs.python.org/3/library/stdtypes.html#str)]
-
 <a id="module-eikon.ext._transforms"></a>
 
 <a id="data-transforms"></a>
@@ -3101,28 +2757,13 @@ declarative YAML surface stable.
 
 ### eikon.ext._transforms.register_transform(name, fn)
 
-* **Parameters:**
-  * **name** ([*str*](https://docs.python.org/3/library/stdtypes.html#str))
-  * **fn** ([*Callable*](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable) *[* *[*[*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]* *,* [*Any*](https://docs.python.org/3/library/typing.html#typing.Any) *]*)
-* **Return type:**
-  None
-
 <a id="eikon.ext._transforms.apply_transforms"></a>
 
 ### eikon.ext._transforms.apply_transforms(data, names)
 
-* **Parameters:**
-  * **data** ([*Any*](https://docs.python.org/3/library/typing.html#typing.Any))
-  * **names** ([*tuple*](https://docs.python.org/3/library/stdtypes.html#tuple) *[*[*str*](https://docs.python.org/3/library/stdtypes.html#str) *,*  *...* *]*)
-* **Return type:**
-  [*Any*](https://docs.python.org/3/library/typing.html#typing.Any)
-
 <a id="eikon.ext._transforms.list_transforms"></a>
 
 ### eikon.ext._transforms.list_transforms()
-
-* **Return type:**
-  [list](https://docs.python.org/3/library/stdtypes.html#list)[[str](https://docs.python.org/3/library/stdtypes.html#str)]
 
 <a id="module-eikon.ext._hooks"></a>
 
@@ -3168,8 +2809,6 @@ Register a callback for a lifecycle hook.
 * **Parameters:**
   * **hook** ([*HookName*](#eikon.ext._hooks.HookName)) – The hook point to attach to.
   * **fn** (*HookFunction*) – A callable invoked when the hook fires.
-* **Return type:**
-  None
 
 <a id="eikon.ext._hooks.fire_hook"></a>
 
@@ -3180,17 +2819,12 @@ Fire all callbacks registered for a hook.
 * **Parameters:**
   * **hook** ([*HookName*](#eikon.ext._hooks.HookName)) – The hook point to fire.
   * **\*\*kwargs** (*Any*) – Context passed to each callback.
-* **Return type:**
-  None
 
 <a id="eikon.ext._hooks.clear_hooks"></a>
 
 ### eikon.ext._hooks.clear_hooks()
 
 Remove all registered hooks.  For testing only.
-
-* **Return type:**
-  None
 
 <a id="module-eikon.ext._discovery"></a>
 

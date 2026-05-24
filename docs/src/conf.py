@@ -70,6 +70,7 @@ autodoc_default_options = {
     "show-inheritance": True,
 }
 autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
 autodoc_member_order = "bysource"
 
 # -- Intersphinx -------------------------------------------------------------

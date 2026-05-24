@@ -1,4 +1,4 @@
-# Makefile for Morpha documentation
+# Makefile for Eikon documentation
 #
 # Sphinx is restricted to the API documentation tree. Prose documentation
 # (index.md, guide/, internals/, adr/) is hand-written Markdown and not
