@@ -25,6 +25,7 @@ dependencies:
   - sphinx                 # documentation generator
   - sphinxcontrib-napoleon # for numpydoc-style docstrings
   - sphinx-rtd-theme       # ReadTheDocs theme
+  - sphinx-markdown-builder # Markdown output for generated API docs
   - sphinx-needs           # for requirements and specifications in Sphinx
   - esbonio                # language server for Sphinx
   - myst-parser            # Markdown support for Sphinx

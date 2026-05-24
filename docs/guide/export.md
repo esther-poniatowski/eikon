@@ -123,4 +123,4 @@ exported = batch_export(
 # {"pdf": Path(...), "png": Path(...)}
 ```
 
-See the {doc}`/api/export` for the complete API reference.
+See [the generated export API](../api/eikon.md#module-eikon.export._config) for the complete API reference.

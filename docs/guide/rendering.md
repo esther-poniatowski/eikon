@@ -62,14 +62,14 @@ The positional `ax` is a matplotlib `Axes`. Keyword arguments come from:
 - `PanelSpec.params` — explicit parameters from the spec
 - Data binding columns (`x`, `y`, `hue`) — resolved from the data source
 
-See {doc}`extensions` for how to register plot types.
+See [Extensions](extensions.md) for how to register plot types.
 
 ## Data binding
 
 When a panel has a `data` field, the pipeline:
 
 1. Loads the data source (CSV file via `csv.DictReader`).
-2. Applies transforms in order (see {doc}`extensions`).
+2. Applies transforms in order (see [Extensions](extensions.md)).
 3. Extracts columns (`x`, `y`, `hue`) into keyword arguments.
 4. Merges them with `PanelSpec.params`.
 5. Passes everything to the plot function.
@@ -109,7 +109,7 @@ def log_render(*, spec, **kwargs):
 register_hook(HookName.PRE_RENDER, log_render)
 ```
 
-See {doc}`extensions` for details on the hook system.
+See [Extensions](extensions.md) for details on the hook system.
 
 ## Overrides
 
@@ -121,4 +121,4 @@ handle = eikon.render("my-figure", overrides={"dpi": 600})
 
 Overrides are forwarded through the render context and can influence export settings.
 
-See the {doc}`/api/render` for the complete API reference.
+See [the generated render API](../api/eikon.md#module-eikon.render._pipeline) for the complete API reference.

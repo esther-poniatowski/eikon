@@ -3,48 +3,28 @@
 Defines and exports Matplotlib figures declaratively for reproducible scientific
 visualizations.
 
-```{toctree}
-:maxdepth: 2
-:caption: User Guide
+## User Guide
 
-guide/installation
-guide/usage
-guide/configuration
-guide/specifications
-guide/styles
-guide/layouts
-guide/rendering
-guide/export
-guide/registry
-guide/cli
-guide/extensions
-```
+- [Installation](guide/installation.md)
+- [Usage](guide/usage.md)
+- [Configuration](guide/configuration.md)
+- [Figure Specifications](guide/specifications.md)
+- [Styles](guide/styles.md)
+- [Layouts](guide/layouts.md)
+- [Rendering](guide/rendering.md)
+- [Export](guide/export.md)
+- [Figure Registry](guide/registry.md)
+- [CLI Reference](guide/cli.md)
+- [Extensions](guide/extensions.md)
 
-```{toctree}
-:maxdepth: 2
-:caption: API Reference
+## API Reference
 
-api/config
-api/spec
-api/style
-api/layout
-api/render
-api/export
-api/registry
-api/ext
-api/types
-```
+- [API Reference](api/index.md)
 
-```{toctree}
-:maxdepth: 2
-:caption: Developer Internals
+## Developer Internals
 
-internals/index
-```
+- [Internals](internals/index.md)
 
-```{toctree}
-:maxdepth: 1
-:caption: Architecture Decisions
+## Architecture Decisions
 
-adr/adr-template
-```
+- [ADR [00XX]: [TITLE]](adr/adr-template.md)

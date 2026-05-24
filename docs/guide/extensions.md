@@ -18,7 +18,7 @@ def draw_violin(ax, /, **kwargs):
     ax.set_ylabel(kwargs.get("ylabel", ""))
 ```
 
-The function must accept a positional matplotlib `Axes` argument and keyword arguments. It matches the `PlotFunction` protocol (see {doc}`/api/render`).
+The function must accept a positional matplotlib `Axes` argument and keyword arguments. It matches the [`PlotFunction` protocol](../api/eikon.md#eikon.render._protocols.PlotFunction).
 
 ### Programmatic registration
 
@@ -158,4 +158,4 @@ from eikon.ext import discover_plugins
 discover_plugins()
 ```
 
-See the {doc}`/api/ext` for the complete API reference.
+See [the generated extension API](../api/eikon.md#module-eikon.ext._registry) for the complete API reference.

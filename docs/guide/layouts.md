@@ -124,4 +124,4 @@ built = add_inset(built, parent_panel="A", name="A_inset", bounds=(0.6, 0.6, 0.3
 built.axes["A_inset"].plot(...)
 ```
 
-See the {doc}`/api/layout` for the complete API reference.
+See [the generated layout API](../api/eikon.md#module-eikon.layout._grid) for the complete API reference.
