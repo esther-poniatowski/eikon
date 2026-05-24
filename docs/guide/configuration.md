@@ -99,7 +99,7 @@ All configuration sections are frozen, keyword-only dataclasses:
 | `ProjectSession` | `config`, `paths` | Bundled config + resolved paths |
 | `ResolvedPaths` | `project_root`, `output_dir`, `styles_dir`, `specs_dir`, `data_dir` | Absolute paths |
 
-See [the generated configuration API](../api/eikon.md#module-eikon.config._schema) for complete field documentation.
+See [the generated configuration API](../api/config.md#module-eikon.config._schema) for complete field documentation.
 
 ## Validation
 

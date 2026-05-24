@@ -157,4 +157,4 @@ params = to_rcparams(sheet)
 # {'font.family': 'serif', 'font.size': 8.0, ...}
 ```
 
-See [the generated style API](../api/eikon.md#module-eikon.style._sheet) for the complete API reference.
+See [the generated style API](../api/style.md#module-eikon.style._sheet) for the complete API reference.

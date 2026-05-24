@@ -3,5 +3,15 @@
 ```{toctree}
 :maxdepth: 2
 
-eikon
+top-level
+types
+config
+spec
+style
+layout
+render
+export
+registry
+ext
+contrib
 ```

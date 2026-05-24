@@ -266,4 +266,4 @@ spec = parse_figure_spec({"name": "fig1", "panels": [...]})
 spec = parse_figure_file("specs/fig1.yaml")
 ```
 
-See [the generated specification API](../api/eikon.md#module-eikon.spec._figure) for the complete API reference.
+See [the generated specification API](../api/spec.md#module-eikon.spec._figure) for the complete API reference.

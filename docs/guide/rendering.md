@@ -121,4 +121,4 @@ handle = eikon.render("my-figure", overrides={"dpi": 600})
 
 Overrides are forwarded through the render context and can influence export settings.
 
-See [the generated render API](../api/eikon.md#module-eikon.render._pipeline) for the complete API reference.
+See [the generated render API](../api/render.md#module-eikon.render._pipeline) for the complete API reference.

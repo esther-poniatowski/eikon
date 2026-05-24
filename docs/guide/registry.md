@@ -130,4 +130,4 @@ From the CLI:
 eikon render-registry fig1 --format pdf
 ```
 
-See [the generated registry API](../api/eikon.md#module-eikon.registry._registry) for the complete API reference.
+See [the generated registry API](../api/registry.md#module-eikon.registry._registry) for the complete API reference.
