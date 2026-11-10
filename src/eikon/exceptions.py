@@ -38,8 +38,9 @@ class ConfigNotFoundError(ConfigError):
 
     def __init__(self, search_root: str = ".") -> None:
         super().__init__(
-            f"No eikon.yaml found searching upward from {search_root!r}, at a root or in its config/tools/. "
-            "Run 'eikon init' to create a project configuration."
+            f"No eikon.yaml found searching upward from {search_root!r}, in config/tools/ or at a root. "
+            "Pass --root or set EIKON_ROOT to name the project root, "
+            "or run 'eikon init' to create a project configuration."
         )
 
 

@@ -6,11 +6,11 @@ Eikon provides a command-line interface built on [Typer](https://typer.tiangolo.
 
 ```bash
 eikon --version          # Show version and exit
-eikon --project-root DIR # Set explicit project root
+eikon --root DIR         # Set explicit project root
 eikon --help             # Show available commands
 ```
 
-The `--project-root` flag overrides auto-discovery and the `EIKON_PROJECT_ROOT` environment variable.
+The `--root` option overrides auto-discovery and the `EIKON_ROOT` environment variable. As a global option, it precedes the command: `eikon --root DIR render specs/fig1.yaml`.
 
 ## Commands
 
@@ -21,7 +21,6 @@ Create a new eikon project with default configuration and directory structure.
 ```bash
 eikon init
 eikon init /path/to/project
-eikon init --project-root /path/to/project
 ```
 
 Accepts an optional positional `path` argument (defaults to `.`).

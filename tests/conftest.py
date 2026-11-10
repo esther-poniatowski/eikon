@@ -40,6 +40,13 @@ registry_file: eikon-registry.yaml
 
 
 @pytest.fixture(autouse=True)
+def _clear_root_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep a project root named in the environment of the shell out of the tests."""
+    monkeypatch.delenv("EIKON_ROOT", raising=False)
+    monkeypatch.delenv("EIKON_PROJECT_ROOT", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def _clear_transforms() -> None:
     """Reset registered data transforms between tests."""
     clear_transforms()

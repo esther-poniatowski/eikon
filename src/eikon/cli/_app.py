@@ -14,11 +14,15 @@ def main_callback(
     version: bool = typer.Option(
         False, "--version", "-v", help="Show the package version and exit."
     ),
-    project_root: str = typer.Option(
+    root: str = typer.Option(
         "",
-        "--project-root",
-        help="Explicit project root directory, overriding auto-discovery.",
+        "--root",
+        help=(
+            "Folder from which eikon finds eikon.yaml and resolves every relative path, "
+            "overriding the EIKON_ROOT environment variable and the upward search."
+        ),
     ),
+    deprecated_root: str = typer.Option("", "--project-root", hidden=True),
 ) -> None:
     """Root command for the package CLI."""
     from pathlib import Path
@@ -26,9 +30,17 @@ def main_callback(
     if version:
         typer.echo(__version__)
         raise typer.Exit()
+    if deprecated_root:
+        # Hidden alias kept for one release; `--root` wins when both are given.
+        typer.echo(
+            "Warning: --project-root is deprecated and will be removed in the next release; "
+            "use --root.",
+            err=True,
+        )
+        root = root or deprecated_root
     ctx.ensure_object(dict)
-    if project_root:
-        ctx.obj["project_root"] = Path(project_root).resolve()
+    if root:
+        ctx.obj["project_root"] = Path(root).resolve()
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())
 

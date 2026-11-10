@@ -25,6 +25,13 @@ class TestConfigNotFoundError:
         assert "eikon.yaml" in str(err)
         assert "/some/path" in str(err)
 
+    def test_message_names_root_option_and_variable(self):
+        msg = str(ConfigNotFoundError("/some/path"))
+        assert "--root" in msg
+        assert "EIKON_ROOT" in msg
+        assert "project-root" not in msg
+        assert "PROJECT_ROOT" not in msg
+
 
 class TestConfigValidationError:
     def test_message_lists_errors(self):

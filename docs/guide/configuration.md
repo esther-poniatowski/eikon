@@ -49,18 +49,18 @@ All fields are optional. Omitted fields use built-in defaults.
 
 Eikon locates the project root using a three-tier strategy:
 
-1. **`--project-root` CLI flag** (highest priority)
-2. **`EIKON_PROJECT_ROOT` environment variable**
-3. **Auto-discovery**: walk upward from the current working directory until a directory holds `eikon.yaml` or `config/tools/eikon.yaml`
+1. **`--root` CLI option** (highest priority)
+2. **`EIKON_ROOT` environment variable**
+3. **Auto-discovery**: walk upward from the current working directory until a directory holds `config/tools/eikon.yaml` or `eikon.yaml`
 
 Eikon commands can therefore run from any subdirectory of the project.
 
 ```bash
 # Explicit root
-eikon render specs/fig.yaml --project-root /path/to/project
+eikon --root /path/to/project render specs/fig.yaml
 
 # Via environment variable
-export EIKON_PROJECT_ROOT=/path/to/project
+export EIKON_ROOT=/path/to/project
 eikon render specs/fig.yaml
 ```
 

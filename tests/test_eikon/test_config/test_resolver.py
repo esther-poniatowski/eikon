@@ -1,5 +1,6 @@
 """Tests for eikon.config._resolver."""
 
+import warnings
 from pathlib import Path
 
 import pytest
@@ -42,8 +43,50 @@ class TestDiscoverProjectRoot:
     def test_env_root_accepts_config_tools(self, tmp_path: Path, monkeypatch):
         (tmp_path / "config" / "tools").mkdir(parents=True)
         (tmp_path / "config" / "tools" / "eikon.yaml").write_text("{}\n")
-        monkeypatch.setenv("EIKON_PROJECT_ROOT", str(tmp_path))
+        monkeypatch.delenv("EIKON_PROJECT_ROOT", raising=False)
+        monkeypatch.setenv("EIKON_ROOT", str(tmp_path))
         assert discover_project_root() == tmp_path.resolve()
+
+
+class TestRootEnvironment:
+    """``EIKON_ROOT`` names the root; the deprecated ``EIKON_PROJECT_ROOT`` is read with a warning."""
+
+    @staticmethod
+    def _project(path: Path) -> Path:
+        path.mkdir()
+        (path / "eikon.yaml").write_text("{}\n")
+        return path.resolve()
+
+    def test_eikon_root(self, tmp_path: Path, monkeypatch):
+        root = self._project(tmp_path / "new")
+        monkeypatch.delenv("EIKON_PROJECT_ROOT", raising=False)
+        monkeypatch.setenv("EIKON_ROOT", str(root))
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            assert discover_project_root(tmp_path) == root
+
+    def test_eikon_root_wins_over_deprecated_variable(self, tmp_path: Path, monkeypatch):
+        root = self._project(tmp_path / "new")
+        former = self._project(tmp_path / "former")
+        monkeypatch.setenv("EIKON_ROOT", str(root))
+        monkeypatch.setenv("EIKON_PROJECT_ROOT", str(former))
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            assert discover_project_root(tmp_path) == root
+
+    def test_deprecated_variable_alone_works_and_warns(self, tmp_path: Path, monkeypatch):
+        former = self._project(tmp_path / "former")
+        monkeypatch.delenv("EIKON_ROOT", raising=False)
+        monkeypatch.setenv("EIKON_PROJECT_ROOT", str(former))
+        with pytest.warns(FutureWarning, match="EIKON_PROJECT_ROOT is deprecated.*EIKON_ROOT"):
+            assert discover_project_root(tmp_path) == former
+
+    def test_empty_eikon_root_falls_back_to_deprecated_variable(self, tmp_path: Path, monkeypatch):
+        former = self._project(tmp_path / "former")
+        monkeypatch.setenv("EIKON_ROOT", "  ")
+        monkeypatch.setenv("EIKON_PROJECT_ROOT", str(former))
+        with pytest.warns(FutureWarning, match="EIKON_ROOT"):
+            assert discover_project_root(tmp_path) == former
 
 
 class TestResolvePaths:

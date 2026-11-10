@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The configuration file is also found in `config/tools/eikon.yaml` below the project root. When the root holds both `config/tools/eikon.yaml` and `eikon.yaml`, the file in `config/tools/` takes precedence.
 
+### Changed
+
+- The global option `--project-root` is renamed `--root`, after the [command-line conventions](https://github.com/esther-poniatowski/keystone/blob/main/docs/internals/cli-conventions.md) of the workspace tools.
+- The environment variable `EIKON_PROJECT_ROOT` is renamed `EIKON_ROOT`. When both are set, `EIKON_ROOT` takes precedence.
+- The error raised when no `eikon.yaml` is found names `--root` and `EIKON_ROOT`.
+
+### Deprecated
+
+- `--project-root` remains for one release as a hidden alias of `--root`, and prints a warning to the standard error that names `--root`. When both options are given, `--root` takes precedence.
+- `EIKON_PROJECT_ROOT` is still read for one release when `EIKON_ROOT` is absent, and reading it issues a `FutureWarning` that names `EIKON_ROOT`.
+
 ## [0.1.0] - 2026-02-11
 
 ### Added

@@ -5,13 +5,14 @@ or explicit project root directory.
 
 Project root resolution uses a three-tier strategy:
 
-1. Explicit ``project_root`` parameter (or ``--project-root`` CLI flag).
-2. ``EIKON_PROJECT_ROOT`` environment variable.
-3. Auto-discovery: walk upward from cwd until a directory holds ``eikon.yaml``, at its root or in
-   ``config/tools/``.
+1. Explicit ``project_root`` parameter (or ``--root`` CLI option).
+2. ``EIKON_ROOT`` environment variable.
+3. Auto-discovery: walk upward from cwd until a directory holds ``eikon.yaml``, in its
+   ``config/tools/`` or at the directory itself.
 """
 
 import os
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,8 +22,14 @@ from eikon.exceptions import ConfigNotFoundError
 
 __all__ = ["ResolvedPaths", "resolve_paths", "discover_project_root", "locate_config"]
 
-EIKON_PROJECT_ROOT_ENV = "EIKON_PROJECT_ROOT"
+EIKON_ROOT_ENV = "EIKON_ROOT"
 """Environment variable name for explicit project root override."""
+
+DEPRECATED_ROOT_ENV = "EIKON_PROJECT_ROOT"
+"""Former name of :data:`EIKON_ROOT_ENV`, read with a warning when ``EIKON_ROOT`` is absent.
+
+Deprecated: to be removed in the release after the one that introduced ``EIKON_ROOT``.
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,9 +85,9 @@ def discover_project_root(start: Path | None = None) -> Path:
 
     Resolution order:
 
-    1. ``EIKON_PROJECT_ROOT`` environment variable (if set and non-empty).
+    1. ``EIKON_ROOT`` environment variable (if set and non-empty).
     2. Walk upward from *start* (defaults to cwd) until a directory holds
-       ``eikon.yaml`` or ``config/tools/eikon.yaml``.
+       ``config/tools/eikon.yaml`` or ``eikon.yaml``.
 
     Use the *start* parameter or the env var for environments where the
     working directory is unreliable (CI runners, notebook kernels).
@@ -89,7 +96,7 @@ def discover_project_root(start: Path | None = None) -> Path:
     ----------
     start : Path, optional
         Starting directory for upward walk.  Defaults to the current
-        working directory.  Ignored when ``EIKON_PROJECT_ROOT`` is set.
+        working directory.  Ignored when ``EIKON_ROOT`` is set.
 
     Returns
     -------
@@ -102,7 +109,7 @@ def discover_project_root(start: Path | None = None) -> Path:
         If no ``eikon.yaml`` is found via any method.
     """
     # Tier 2: environment variable
-    env_root = os.environ.get(EIKON_PROJECT_ROOT_ENV, "").strip()
+    env_root = _root_from_environment()
     if env_root:
         root = Path(env_root).resolve()
         if locate_config(root) is not None:
@@ -115,6 +122,28 @@ def discover_project_root(start: Path | None = None) -> Path:
         if locate_config(directory) is not None:
             return directory
     raise ConfigNotFoundError(str(current))
+
+
+def _root_from_environment() -> str:
+    """Return the project root named by the environment, or an empty string when none is named.
+
+    ``EIKON_ROOT`` takes precedence.  The deprecated ``EIKON_PROJECT_ROOT`` is read only when
+    ``EIKON_ROOT`` is absent or empty, and reading it issues a :class:`FutureWarning`, which Python
+    shows to end users by default.  The warning keeps the location of this function, so that the
+    default filter shows it once per process however many callers resolve the root.
+    """
+    root = os.environ.get(EIKON_ROOT_ENV, "").strip()
+    if root:
+        return root
+    deprecated_root = os.environ.get(DEPRECATED_ROOT_ENV, "").strip()
+    if deprecated_root:
+        warnings.warn(
+            f"{DEPRECATED_ROOT_ENV} is deprecated and will be removed in the next release; "
+            f"set {EIKON_ROOT_ENV} instead.",
+            FutureWarning,
+            stacklevel=1,
+        )
+    return deprecated_root
 
 
 def resolve_paths(

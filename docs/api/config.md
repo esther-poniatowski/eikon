@@ -175,7 +175,8 @@ Load and validate the project configuration.
 
 * **Parameters:**
   **path** (*Path* *,* *optional*) – Explicit path to an `eikon.yaml` file.  If `None`, the file is
-  discovered by walking upward from the current working directory.
+  discovered by walking upward from the current working directory, at
+  the root of a project or in its `config/tools/`.
 * **Returns:**
   Validated project configuration.
 * **Return type:**
@@ -212,9 +213,10 @@ or explicit project root directory.
 
 Project root resolution uses a three-tier strategy:
 
-1. Explicit `project_root` parameter (or `--project-root` CLI flag).
-2. `EIKON_PROJECT_ROOT` environment variable.
-3. Auto-discovery: walk upward from cwd until `eikon.yaml` is found.
+1. Explicit `project_root` parameter (or `--root` CLI option).
+2. `EIKON_ROOT` environment variable.
+3. Auto-discovery: walk upward from cwd until a directory holds `eikon.yaml`, in its
+   `config/tools/` or at the directory itself.
 
 <a id="eikon.config._resolver.ResolvedPaths"></a>
 
@@ -282,22 +284,47 @@ Resolve the project root using the three-tier strategy.
 
 Resolution order:
 
-1. `EIKON_PROJECT_ROOT` environment variable (if set and non-empty).
-2. Walk upward from *start* (defaults to cwd) until `eikon.yaml` is
-   found.
+1. `EIKON_ROOT` environment variable (if set and non-empty).
+2. Walk upward from *start* (defaults to cwd) until a directory holds
+   `config/tools/eikon.yaml` or `eikon.yaml`.
 
 Use the *start* parameter or the env var for environments where the
 working directory is unreliable (CI runners, notebook kernels).
 
 * **Parameters:**
   **start** (*Path* *,* *optional*) – Starting directory for upward walk.  Defaults to the current
-  working directory.  Ignored when `EIKON_PROJECT_ROOT` is set.
+  working directory.  Ignored when `EIKON_ROOT` is set.
 * **Returns:**
   Absolute path to the project root.
 * **Return type:**
   Path
 * **Raises:**
   [**ConfigNotFoundError**](types.md#eikon.exceptions.ConfigNotFoundError) – If no `eikon.yaml` is found via any method.
+
+<a id="eikon.config._resolver.locate_config"></a>
+
+### eikon.config._resolver.locate_config(root)
+
+Return the configuration file of a project root, or `None` when it holds none.
+
+The file sits in `config/tools/eikon.yaml` or at the root itself, `eikon.yaml`; the file in
+`config/tools/` takes precedence when both exist.
+
+### Examples
+
+```pycon
+>>> import tempfile
+>>> root = Path(tempfile.mkdtemp())
+>>> locate_config(root) is None
+True
+>>> _ = (root / "eikon.yaml").write_text("{}")
+>>> locate_config(root).relative_to(root).as_posix()
+'eikon.yaml'
+>>> (root / "config" / "tools").mkdir(parents=True)
+>>> _ = (root / "config" / "tools" / "eikon.yaml").write_text("{}")
+>>> locate_config(root).relative_to(root).as_posix()
+'config/tools/eikon.yaml'
+```
 
 <a id="module-eikon.config._session"></a>
 

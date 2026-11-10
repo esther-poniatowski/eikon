@@ -27,7 +27,7 @@ __all__ = [
 
 
 def get_project_root(ctx: typer.Context) -> Path | None:
-    """Extract the ``--project-root`` value from the CLI context, if set."""
+    """Extract the ``--root`` value from the CLI context, if set."""
     obj = ctx.find_root().obj
     if isinstance(obj, dict):
         return obj.get("project_root")

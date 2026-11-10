@@ -123,18 +123,18 @@ class TestCliValidate:
         assert "validation failed" in result.output.lower()
 
 
-class TestCliProjectRoot:
-    """--project-root global flag threads the root through ctx.obj."""
+class TestCliRoot:
+    """--root global option threads the root through ctx.obj."""
 
-    def test_project_root_flag(self, tmp_project: Path, monkeypatch):
+    def test_root_option(self, tmp_project: Path, monkeypatch):
         monkeypatch.chdir(tmp_project)
-        monkeypatch.delenv("EIKON_PROJECT_ROOT", raising=False)
         result = runner.invoke(
-            app, ["--project-root", str(tmp_project), "registry", "list"]
+            app, ["--root", str(tmp_project), "registry", "list"]
         )
         assert result.exit_code == 0
+        assert "deprecated" not in result.output
 
-    def test_render_uses_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
+    def test_render_uses_root_option(self, tmp_project: Path, tmp_path: Path, monkeypatch):
         spec_path = tmp_project / "specs" / "rooted.yaml"
         spec_path.write_text(
             "name: rooted\npanels:\n  - name: A\n    plot_type: line\n",
@@ -145,13 +145,13 @@ class TestCliProjectRoot:
         monkeypatch.chdir(elsewhere)
         result = runner.invoke(
             app,
-            ["--project-root", str(tmp_project), "render", str(spec_path), "-f", "pdf"],
+            ["--root", str(tmp_project), "render", str(spec_path), "-f", "pdf"],
         )
 
         assert result.exit_code == 0
         assert (tmp_project / "figures" / "rooted.pdf").exists()
 
-    def test_batch_uses_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
+    def test_batch_uses_root_option(self, tmp_project: Path, tmp_path: Path, monkeypatch):
         spec_path = tmp_project / "specs" / "b1.yaml"
         spec_path.write_text(
             "name: b1\npanels:\n  - name: A\n    plot_type: line\n", encoding="utf-8"
@@ -161,20 +161,59 @@ class TestCliProjectRoot:
         monkeypatch.chdir(elsewhere)
         result = runner.invoke(
             app,
-            ["--project-root", str(tmp_project), "batch", "-f", "pdf"],
+            ["--root", str(tmp_project), "batch", "-f", "pdf"],
         )
         assert result.exit_code == 0
         assert (tmp_project / "figures" / "b1.pdf").exists()
 
-    def test_registry_with_project_root_flag(self, tmp_project: Path, tmp_path: Path, monkeypatch):
+    def test_registry_with_root_option(self, tmp_project: Path, tmp_path: Path, monkeypatch):
         elsewhere = tmp_path / "elsewhere-reg"
         elsewhere.mkdir()
         monkeypatch.chdir(elsewhere)
         result = runner.invoke(
             app,
-            ["--project-root", str(tmp_project), "registry", "list"],
+            ["--root", str(tmp_project), "registry", "list"],
         )
         assert result.exit_code == 0
+
+    def test_deprecated_project_root_works_and_warns(
+        self, tmp_project: Path, tmp_path: Path, monkeypatch
+    ):
+        elsewhere = tmp_path / "elsewhere-alias"
+        elsewhere.mkdir()
+        monkeypatch.chdir(elsewhere)
+        result = runner.invoke(
+            app,
+            ["--project-root", str(tmp_project), "registry", "add", "aliased"],
+        )
+        assert result.exit_code == 0
+        assert "--project-root is deprecated" in result.stderr
+        assert "--root" in result.stderr
+        assert (tmp_project / "eikon-registry.yaml").is_file()
+
+    def test_root_wins_over_deprecated_project_root(
+        self, tmp_project: Path, tmp_path: Path, monkeypatch
+    ):
+        decoy = tmp_path / "decoy"
+        decoy.mkdir()
+        monkeypatch.chdir(decoy)
+        result = runner.invoke(
+            app,
+            [
+                "--root", str(tmp_project),
+                "--project-root", str(decoy),
+                "registry", "add", "rooted",
+            ],
+        )
+        assert result.exit_code == 0
+        assert (tmp_project / "eikon-registry.yaml").is_file()
+        assert not (decoy / "eikon-registry.yaml").exists()
+
+    def test_help_lists_root_only(self):
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "--root" in result.output
+        assert "--project-root" not in result.output
 
 
 class TestCliRegistry:
