@@ -18,8 +18,9 @@ DEFAULT_STYLE = StyleDefaults()
 DEFAULT_CONFIG = ProjectConfig()
 
 CONFIG_FILENAME = "eikon.yaml"
-
-CONFIG_LOCATIONS = (Path(CONFIG_FILENAME), Path("config") / "tools" / CONFIG_FILENAME)
-"""Places of the configuration file below a project root, in the order of their precedence: the root
-itself, then ``config/tools/``, where a project keeps the settings of its tools off its root."""
 """Standard name for the project configuration file."""
+
+CONFIG_LOCATIONS = (Path("config") / "tools" / CONFIG_FILENAME, Path(CONFIG_FILENAME))
+"""Places of the configuration file below a project root, in the order of their precedence:
+``config/tools/``, where a project keeps the settings of its tools off its root, then the root
+itself."""

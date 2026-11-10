@@ -29,9 +29,13 @@ class TestDiscoverProjectRoot:
         (tmp_path / "specs").mkdir()
         assert discover_project_root(tmp_path / "specs") == tmp_path.resolve()
 
-    def test_root_file_takes_precedence(self, tmp_path: Path):
+    def test_config_tools_file_takes_precedence(self, tmp_path: Path):
         (tmp_path / "config" / "tools").mkdir(parents=True)
         (tmp_path / "config" / "tools" / "eikon.yaml").write_text("{}\n")
+        (tmp_path / "eikon.yaml").write_text("{}\n")
+        assert locate_config(tmp_path) == tmp_path / "config" / "tools" / "eikon.yaml"
+
+    def test_root_file_found_alone(self, tmp_path: Path):
         (tmp_path / "eikon.yaml").write_text("{}\n")
         assert locate_config(tmp_path) == tmp_path / "eikon.yaml"
 

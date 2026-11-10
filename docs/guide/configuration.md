@@ -8,7 +8,7 @@ Built-in defaults → eikon.yaml → Figure-level overrides → Runtime kwargs
 
 ## Project configuration file
 
-The main configuration file is `eikon.yaml`, placed at the project root or in its `config/tools/` folder. A project that keeps the settings of its tools off its root uses `config/tools/eikon.yaml`. When both files exist, the file at the root takes precedence. Run `eikon init` to generate a template.
+The main configuration file is `eikon.yaml`, placed in the `config/tools/` folder of the project root or at the root itself. A project that keeps the settings of its tools off its root uses `config/tools/eikon.yaml`. When both files exist, the file in `config/tools/` takes precedence. Run `eikon init` to generate a template.
 
 ### Full schema
 

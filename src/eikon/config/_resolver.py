@@ -49,8 +49,8 @@ class ResolvedPaths:
 def locate_config(root: Path) -> Path | None:
     """Return the configuration file of a project root, or ``None`` when it holds none.
 
-    The file sits at the root itself, ``eikon.yaml``, or in ``config/tools/eikon.yaml``; the root
-    takes precedence when both exist.
+    The file sits in ``config/tools/eikon.yaml`` or at the root itself, ``eikon.yaml``; the file in
+    ``config/tools/`` takes precedence when both exist.
 
     Examples
     --------
@@ -58,6 +58,9 @@ def locate_config(root: Path) -> Path | None:
     >>> root = Path(tempfile.mkdtemp())
     >>> locate_config(root) is None
     True
+    >>> _ = (root / "eikon.yaml").write_text("{}")
+    >>> locate_config(root).relative_to(root).as_posix()
+    'eikon.yaml'
     >>> (root / "config" / "tools").mkdir(parents=True)
     >>> _ = (root / "config" / "tools" / "eikon.yaml").write_text("{}")
     >>> locate_config(root).relative_to(root).as_posix()
