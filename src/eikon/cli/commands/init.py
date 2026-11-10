@@ -2,17 +2,34 @@ from pathlib import Path
 
 import typer
 
+from eikon.cli._context import USAGE_ERROR
+from eikon.config._defaults import CONFIG_FILENAME
+from eikon.config._resolver import locate_config
+from eikon.exceptions import ConfigConflictError
+
 
 def cli_init(
     path: str = typer.Argument(".", help="Project directory to initialize."),
+    force: bool = typer.Option(
+        False, "--force", help="Overwrite the settings file and the example specs if they exist."
+    ),
 ) -> None:
     """Initialize an eikon project."""
     project_dir = Path(path).resolve()
-    config_path = project_dir / "eikon.yaml"
+    try:
+        config_path = locate_config(project_dir) or project_dir / CONFIG_FILENAME
+    except ConfigConflictError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=USAGE_ERROR) from exc
+    example_spec_path = project_dir / "specs" / "example.yaml"
+    multi_spec_path = project_dir / "specs" / "multi-panel-example.yaml"
 
-    if config_path.exists():
-        typer.echo(f"eikon.yaml already exists in {project_dir}")
-        raise typer.Exit(code=1)
+    # The scaffolded files may hold edits of the researcher, which eikon cannot regenerate.
+    existing = [p for p in (config_path, example_spec_path, multi_spec_path) if p.exists()]
+    if existing and not force:
+        names = ", ".join(str(p) for p in existing)
+        typer.echo(f"Error: refusing to overwrite {names}; pass --force to overwrite.", err=True)
+        raise typer.Exit(code=USAGE_ERROR)
 
     dirs = ["figures", "styles", "specs", "data"]
     for dirname in dirs:
@@ -44,7 +61,6 @@ registry_file: eikon-registry.yaml
 """
     config_path.write_text(default_yaml, encoding="utf-8")
 
-    example_spec_path = project_dir / "specs" / "example.yaml"
     example_spec = """\
 # Example figure specification — single panel
 spec_version: 1
@@ -69,7 +85,6 @@ export:
 """
     example_spec_path.write_text(example_spec, encoding="utf-8")
 
-    multi_spec_path = project_dir / "specs" / "multi-panel-example.yaml"
     multi_spec = """\
 # Example figure specification — multi-panel layout
 spec_version: 1
@@ -116,6 +131,6 @@ export:
     typer.echo(f"Initialized eikon project in {project_dir}")
     for dirname in dirs:
         typer.echo(f"  Created {dirname}/")
-    typer.echo("  Created eikon.yaml")
+    typer.echo(f"  Created {config_path.relative_to(project_dir).as_posix()}")
     typer.echo("  Created specs/example.yaml")
     typer.echo("  Created specs/multi-panel-example.yaml")

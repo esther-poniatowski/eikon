@@ -9,8 +9,8 @@ from eikon.ext import clear_transforms
 
 @pytest.fixture()
 def tmp_project(tmp_path: Path) -> Path:
-    """Create a minimal eikon project directory with ``eikon.yaml``."""
-    config = tmp_path / "eikon.yaml"
+    """Create a minimal eikon project directory with ``eikon.yml``."""
+    config = tmp_path / "eikon.yml"
     config.write_text(
         """\
 paths:
@@ -43,7 +43,6 @@ registry_file: eikon-registry.yaml
 def _clear_root_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep a project root named in the environment of the shell out of the tests."""
     monkeypatch.delenv("EIKON_ROOT", raising=False)
-    monkeypatch.delenv("EIKON_PROJECT_ROOT", raising=False)
 
 
 @pytest.fixture(autouse=True)

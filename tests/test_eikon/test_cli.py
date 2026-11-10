@@ -57,16 +57,37 @@ class TestCliInit:
     def test_creates_project(self, tmp_path: Path):
         result = runner.invoke(app, ["init", str(tmp_path)])
         assert result.exit_code == 0
-        assert (tmp_path / "eikon.yaml").is_file()
+        assert (tmp_path / "eikon.yml").is_file()
         assert (tmp_path / "figures").is_dir()
         assert (tmp_path / "styles").is_dir()
         assert (tmp_path / "specs").is_dir()
         assert (tmp_path / "data").is_dir()
 
     def test_refuses_if_exists(self, tmp_path: Path):
-        (tmp_path / "eikon.yaml").write_text("", encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text("", encoding="utf-8")
         result = runner.invoke(app, ["init", str(tmp_path)])
-        assert result.exit_code == 1
+        assert result.exit_code == 2
+        assert str(tmp_path / "eikon.yml") in result.stderr
+        assert (tmp_path / "eikon.yml").read_text(encoding="utf-8") == ""
+
+    def test_refuses_to_overwrite_edited_example_spec(self, tmp_path: Path):
+        (tmp_path / "specs").mkdir()
+        edited = tmp_path / "specs" / "example.yaml"
+        edited.write_text("name: edited\n", encoding="utf-8")
+        result = runner.invoke(app, ["init", str(tmp_path)])
+        assert result.exit_code == 2
+        assert str(edited) in result.stderr
+        assert edited.read_text(encoding="utf-8") == "name: edited\n"
+        assert not (tmp_path / "eikon.yml").exists()
+
+    def test_force_overwrites_settings_in_config_tools(self, tmp_path: Path):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        settings = tmp_path / "config" / "tools" / "eikon.yml"
+        settings.write_text("", encoding="utf-8")
+        result = runner.invoke(app, ["init", str(tmp_path), "--force"])
+        assert result.exit_code == 0
+        assert "config_version: 1" in settings.read_text(encoding="utf-8")
+        assert not (tmp_path / "eikon.yml").exists()
 
     def test_generates_example_spec(self, tmp_path: Path):
         runner.invoke(app, ["init", str(tmp_path)])
@@ -88,25 +109,25 @@ class TestCliInit:
 
     def test_config_version_in_template(self, tmp_path: Path):
         runner.invoke(app, ["init", str(tmp_path)])
-        content = (tmp_path / "eikon.yaml").read_text(encoding="utf-8")
+        content = (tmp_path / "eikon.yml").read_text(encoding="utf-8")
         assert "config_version: 1" in content
 
 
 class TestCliValidate:
     def test_valid_config(self, tmp_project: Path):
-        result = runner.invoke(app, ["validate", str(tmp_project / "eikon.yaml")])
+        result = runner.invoke(app, ["validate", str(tmp_project / "eikon.yml")])
         assert result.exit_code == 0
         assert "valid" in result.output.lower()
 
     def test_invalid_config(self, tmp_path: Path):
-        cfg = tmp_path / "eikon.yaml"
+        cfg = tmp_path / "eikon.yml"
         cfg.write_text("export:\n  dpi: -1\n", encoding="utf-8")
         result = runner.invoke(app, ["validate", str(cfg)])
         assert result.exit_code == 1
 
     def test_missing_file(self, tmp_path: Path):
         result = runner.invoke(app, ["validate", str(tmp_path / "missing.yaml")])
-        assert result.exit_code == 1
+        assert result.exit_code == 2
 
     def test_valid_figure_spec(self, tmp_path: Path):
         spec = tmp_path / "fig.yaml"
@@ -116,7 +137,7 @@ class TestCliValidate:
         assert "valid" in result.output.lower()
 
     def test_invalid_config_rich_output(self, tmp_path: Path):
-        cfg = tmp_path / "eikon.yaml"
+        cfg = tmp_path / "eikon.yml"
         cfg.write_text("export:\n  dpi: -1\n", encoding="utf-8")
         result = runner.invoke(app, ["validate", str(cfg)])
         assert result.exit_code == 1
@@ -176,44 +197,81 @@ class TestCliRoot:
         )
         assert result.exit_code == 0
 
-    def test_deprecated_project_root_works_and_warns(
-        self, tmp_project: Path, tmp_path: Path, monkeypatch
-    ):
-        elsewhere = tmp_path / "elsewhere-alias"
+    def test_short_root_option(self, tmp_project: Path, tmp_path: Path, monkeypatch):
+        elsewhere = tmp_path / "elsewhere-short"
         elsewhere.mkdir()
         monkeypatch.chdir(elsewhere)
-        result = runner.invoke(
-            app,
-            ["--project-root", str(tmp_project), "registry", "add", "aliased"],
-        )
-        assert result.exit_code == 0
-        assert "--project-root is deprecated" in result.stderr
-        assert "--root" in result.stderr
-        assert (tmp_project / "eikon-registry.yaml").is_file()
-
-    def test_root_wins_over_deprecated_project_root(
-        self, tmp_project: Path, tmp_path: Path, monkeypatch
-    ):
-        decoy = tmp_path / "decoy"
-        decoy.mkdir()
-        monkeypatch.chdir(decoy)
-        result = runner.invoke(
-            app,
-            [
-                "--root", str(tmp_project),
-                "--project-root", str(decoy),
-                "registry", "add", "rooted",
-            ],
-        )
+        result = runner.invoke(app, ["-r", str(tmp_project), "registry", "add", "short"])
         assert result.exit_code == 0
         assert (tmp_project / "eikon-registry.yaml").is_file()
-        assert not (decoy / "eikon-registry.yaml").exists()
 
-    def test_help_lists_root_only(self):
+    def test_retired_project_root_is_rejected(self, tmp_project: Path):
+        result = runner.invoke(
+            app, ["--project-root", str(tmp_project), "registry", "list"]
+        )
+        assert result.exit_code == 2
+        assert "No such option" in result.output
+
+    def test_help_lists_root_and_config(self):
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "--root" in result.output
+        assert "--config" in result.output
         assert "--project-root" not in result.output
+
+
+class TestCliSettings:
+    """--config names the settings file; without one, eikon runs on its built-in defaults."""
+
+    def test_config_option_relative_to_current_folder(self, tmp_path: Path, monkeypatch):
+        root = tmp_path / "root"
+        root.mkdir()
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        (elsewhere / "custom.yml").write_text(
+            "registry_file: custom-registry.yaml\n", encoding="utf-8"
+        )
+        monkeypatch.chdir(elsewhere)
+        result = runner.invoke(
+            app, ["-r", str(root), "-c", "custom.yml", "registry", "add", "fig"]
+        )
+        assert result.exit_code == 0
+        assert (root / "custom-registry.yaml").is_file()
+
+    def test_absent_config_option_is_an_error(self, tmp_path: Path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        result = runner.invoke(app, ["--config", "absent.yml", "registry", "list"])
+        assert result.exit_code == 2
+        assert "absent.yml" in result.stderr
+
+    def test_no_settings_file_runs_on_defaults(self, tmp_path: Path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        result = runner.invoke(app, ["registry", "add", "fig"])
+        assert result.exit_code == 0
+        assert (tmp_path / "eikon-registry.yaml").is_file()
+
+    def test_conflicting_settings_files_name_both(self, tmp_path: Path, monkeypatch):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        (tmp_path / "config" / "tools" / "eikon.yml").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text("{}\n", encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+        result = runner.invoke(app, ["registry", "list"])
+        assert result.exit_code == 2
+        assert str(tmp_path / "config" / "tools" / "eikon.yml") in result.stderr
+        assert str(tmp_path / "eikon.yml") in result.stderr
+
+    def test_retired_root_variable_is_ignored(self, tmp_path: Path, monkeypatch):
+        former = tmp_path / "former"
+        former.mkdir()
+        (former / "eikon.yml").write_text(_EIKON_YAML, encoding="utf-8")
+        start = tmp_path / "start"
+        start.mkdir()
+        monkeypatch.chdir(start)
+        monkeypatch.setenv("EIKON_PROJECT_ROOT", str(former))
+        result = runner.invoke(app, ["registry", "add", "fig"])
+        assert result.exit_code == 0
+        assert (start / "eikon-registry.yaml").is_file()
+        assert not (former / "eikon-registry.yaml").exists()
 
 
 class TestCliRegistry:
@@ -301,6 +359,23 @@ class TestCliRenderRegistry:
         assert result.exit_code == 0
         assert "Rendered" in result.output
 
+    def test_spec_path_stored_relative_to_root(self, tmp_project: Path, monkeypatch) -> None:
+        spec = tmp_project / "specs" / "sub.yaml"
+        spec.write_text(
+            "name: sub\npanels:\n  - name: A\n    plot_type: noop\n",
+            encoding="utf-8",
+        )
+        monkeypatch.chdir(tmp_project / "specs")
+        result = runner.invoke(app, ["registry", "add", "sub", "--spec-path", "sub.yaml"])
+        assert result.exit_code == 0
+        content = (tmp_project / "eikon-registry.yaml").read_text(encoding="utf-8")
+        assert "specs/sub.yaml" in content
+        assert str(tmp_project) not in content
+        monkeypatch.chdir(tmp_project / "data")
+        result = runner.invoke(app, ["render-registry", "sub"])
+        assert result.exit_code == 0
+        assert "Rendered" in result.output
+
     def test_render_by_name_fallback_to_specs_dir(self, tmp_project: Path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_project)
         spec = tmp_project / "specs" / "fallback.yaml"
@@ -351,7 +426,7 @@ class TestCliBatch:
 
     def test_batch_explicit_specs(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text(_EIKON_YAML, encoding="utf-8")
         (tmp_path / "figures").mkdir()
         s1 = _write_spec(tmp_path / "a.yaml", "fig-a")
         s2 = _write_spec(tmp_path / "b.yaml", "fig-b")
@@ -361,7 +436,7 @@ class TestCliBatch:
 
     def test_batch_scans_specs_dir(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text(_EIKON_YAML, encoding="utf-8")
         specs_dir = tmp_path / "specs"
         specs_dir.mkdir()
         (tmp_path / "figures").mkdir()
@@ -373,14 +448,14 @@ class TestCliBatch:
 
     def test_batch_no_specs_dir_fails(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text(_EIKON_YAML, encoding="utf-8")
         result = runner.invoke(app, ["batch"])
         assert result.exit_code == 1
         assert "not found" in result.output.lower()
 
     def test_batch_tag_filter(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text(_EIKON_YAML, encoding="utf-8")
         specs_dir = tmp_path / "specs"
         specs_dir.mkdir()
         (tmp_path / "figures").mkdir()
@@ -392,7 +467,7 @@ class TestCliBatch:
 
     def test_batch_group_filter(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text(_EIKON_YAML, encoding="utf-8")
         specs_dir = tmp_path / "specs"
         specs_dir.mkdir()
         (tmp_path / "figures").mkdir()
@@ -404,7 +479,7 @@ class TestCliBatch:
 
     def test_batch_no_matches(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text(_EIKON_YAML, encoding="utf-8")
         specs_dir = tmp_path / "specs"
         specs_dir.mkdir()
         _write_spec(specs_dir / "a.yaml", "a", tags=["x"])
@@ -414,7 +489,7 @@ class TestCliBatch:
 
     def test_batch_continue_on_error(self, tmp_path: Path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        (tmp_path / "eikon.yaml").write_text(_EIKON_YAML, encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text(_EIKON_YAML, encoding="utf-8")
         (tmp_path / "figures").mkdir()
         good = _write_spec(tmp_path / "good.yaml", "good")
         bad = tmp_path / "bad.yaml"

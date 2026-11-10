@@ -15,12 +15,12 @@ The export pipeline saves rendered figures to files in multiple formats with con
 Export settings follow the configuration hierarchy:
 
 ```
-Project defaults (eikon.yaml) → Per-figure overrides (spec YAML) → CLI flags
+Project defaults (eikon.yml) → Per-figure overrides (spec YAML) → CLI flags
 ```
 
 ### Project-level defaults
 
-In `eikon.yaml`:
+In `eikon.yml`:
 
 ```yaml
 export:

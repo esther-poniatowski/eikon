@@ -20,7 +20,7 @@ The command creates:
 
 ```
 my-figures/
-    eikon.yaml          # Project configuration
+    eikon.yml          # Project configuration
     specs/              # Figure specification YAML files
     styles/             # Custom style files
     figures/            # Exported figures (output)
@@ -81,7 +81,7 @@ handle.close()
 ```
 
 The exported files appear in the `figures/` directory (configurable via
-`eikon.yaml`).
+`eikon.yml`).
 
 ## Composing Multi-Panel Figures
 

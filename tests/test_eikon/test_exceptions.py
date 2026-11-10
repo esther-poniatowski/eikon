@@ -1,6 +1,7 @@
 """Tests for eikon.exceptions."""
 
 from eikon.exceptions import (
+    ConfigConflictError,
     ConfigNotFoundError,
     ConfigValidationError,
     EikonError,
@@ -13,6 +14,7 @@ from eikon.exceptions import (
 class TestExceptionHierarchy:
     def test_all_inherit_from_eikon_error(self):
         assert issubclass(ConfigNotFoundError, EikonError)
+        assert issubclass(ConfigConflictError, EikonError)
         assert issubclass(ConfigValidationError, EikonError)
         assert issubclass(SpecValidationError, EikonError)
         assert issubclass(PanelOverlapError, EikonError)
@@ -20,17 +22,17 @@ class TestExceptionHierarchy:
 
 
 class TestConfigNotFoundError:
-    def test_message(self):
-        err = ConfigNotFoundError("/some/path")
-        assert "eikon.yaml" in str(err)
-        assert "/some/path" in str(err)
+    def test_message_names_the_file(self):
+        err = ConfigNotFoundError("/some/path/eikon.yml")
+        assert "/some/path/eikon.yml" in str(err)
 
-    def test_message_names_root_option_and_variable(self):
-        msg = str(ConfigNotFoundError("/some/path"))
-        assert "--root" in msg
-        assert "EIKON_ROOT" in msg
-        assert "project-root" not in msg
-        assert "PROJECT_ROOT" not in msg
+
+class TestConfigConflictError:
+    def test_message_names_both_files(self):
+        err = ConfigConflictError(["/p/config/tools/eikon.yml", "/p/eikon.yml"])
+        assert "/p/config/tools/eikon.yml" in str(err)
+        assert "/p/eikon.yml" in str(err)
+        assert err.paths == ["/p/config/tools/eikon.yml", "/p/eikon.yml"]
 
 
 class TestConfigValidationError:

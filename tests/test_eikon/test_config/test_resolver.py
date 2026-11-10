@@ -1,17 +1,16 @@
 """Tests for eikon.config._resolver."""
 
-import warnings
 from pathlib import Path
 
 import pytest
 
 from eikon.config._resolver import discover_project_root, locate_config, resolve_paths
 from eikon.config._schema import PathsConfig
-from eikon.exceptions import ConfigNotFoundError
+from eikon.exceptions import ConfigConflictError
 
 
 class TestDiscoverProjectRoot:
-    def test_finds_eikon_yaml(self, tmp_project: Path):
+    def test_finds_eikon_yml(self, tmp_project: Path):
         root = discover_project_root(tmp_project)
         assert root == tmp_project
 
@@ -20,73 +19,75 @@ class TestDiscoverProjectRoot:
         root = discover_project_root(sub)
         assert root == tmp_project
 
-    def test_raises_when_not_found(self, tmp_path: Path):
-        with pytest.raises(ConfigNotFoundError):
-            discover_project_root(tmp_path)
+    def test_current_folder_when_no_settings_file(self, tmp_path: Path):
+        assert discover_project_root(tmp_path) == tmp_path.resolve()
 
     def test_finds_config_in_config_tools(self, tmp_path: Path):
         (tmp_path / "config" / "tools").mkdir(parents=True)
-        (tmp_path / "config" / "tools" / "eikon.yaml").write_text("{}\n")
+        (tmp_path / "config" / "tools" / "eikon.yml").write_text("{}\n")
         (tmp_path / "specs").mkdir()
         assert discover_project_root(tmp_path / "specs") == tmp_path.resolve()
 
-    def test_config_tools_file_takes_precedence(self, tmp_path: Path):
-        (tmp_path / "config" / "tools").mkdir(parents=True)
-        (tmp_path / "config" / "tools" / "eikon.yaml").write_text("{}\n")
+    def test_retired_settings_name_is_not_found(self, tmp_path: Path):
         (tmp_path / "eikon.yaml").write_text("{}\n")
-        assert locate_config(tmp_path) == tmp_path / "config" / "tools" / "eikon.yaml"
-
-    def test_root_file_found_alone(self, tmp_path: Path):
-        (tmp_path / "eikon.yaml").write_text("{}\n")
-        assert locate_config(tmp_path) == tmp_path / "eikon.yaml"
+        (tmp_path / "specs").mkdir()
+        assert discover_project_root(tmp_path / "specs") == (tmp_path / "specs").resolve()
 
     def test_env_root_accepts_config_tools(self, tmp_path: Path, monkeypatch):
         (tmp_path / "config" / "tools").mkdir(parents=True)
-        (tmp_path / "config" / "tools" / "eikon.yaml").write_text("{}\n")
-        monkeypatch.delenv("EIKON_PROJECT_ROOT", raising=False)
+        (tmp_path / "config" / "tools" / "eikon.yml").write_text("{}\n")
         monkeypatch.setenv("EIKON_ROOT", str(tmp_path))
         assert discover_project_root() == tmp_path.resolve()
 
 
-class TestRootEnvironment:
-    """``EIKON_ROOT`` names the root; the deprecated ``EIKON_PROJECT_ROOT`` is read with a warning."""
+class TestLocateConfig:
+    def test_config_tools_file_found_alone(self, tmp_path: Path):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        (tmp_path / "config" / "tools" / "eikon.yml").write_text("{}\n")
+        assert locate_config(tmp_path) == tmp_path / "config" / "tools" / "eikon.yml"
 
-    @staticmethod
-    def _project(path: Path) -> Path:
-        path.mkdir()
-        (path / "eikon.yaml").write_text("{}\n")
-        return path.resolve()
+    def test_root_file_found_alone(self, tmp_path: Path):
+        (tmp_path / "eikon.yml").write_text("{}\n")
+        assert locate_config(tmp_path) == tmp_path / "eikon.yml"
+
+    def test_none_without_settings_file(self, tmp_path: Path):
+        assert locate_config(tmp_path) is None
+
+    def test_both_files_are_an_error_naming_both(self, tmp_path: Path):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        (tmp_path / "config" / "tools" / "eikon.yml").write_text("{}\n")
+        (tmp_path / "eikon.yml").write_text("{}\n")
+        with pytest.raises(ConfigConflictError) as info:
+            locate_config(tmp_path)
+        message = str(info.value)
+        assert str(tmp_path / "config" / "tools" / "eikon.yml") in message
+        assert str(tmp_path / "eikon.yml") in message
+
+
+class TestRootEnvironment:
+    """``EIKON_ROOT`` names the root; the retired ``EIKON_PROJECT_ROOT`` is ignored."""
 
     def test_eikon_root(self, tmp_path: Path, monkeypatch):
-        root = self._project(tmp_path / "new")
-        monkeypatch.delenv("EIKON_PROJECT_ROOT", raising=False)
+        root = tmp_path / "named"
+        root.mkdir()
+        (root / "eikon.yml").write_text("{}\n")
         monkeypatch.setenv("EIKON_ROOT", str(root))
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            assert discover_project_root(tmp_path) == root
+        assert discover_project_root(tmp_path) == root.resolve()
 
-    def test_eikon_root_wins_over_deprecated_variable(self, tmp_path: Path, monkeypatch):
-        root = self._project(tmp_path / "new")
-        former = self._project(tmp_path / "former")
+    def test_eikon_root_without_settings_file(self, tmp_path: Path, monkeypatch):
+        root = tmp_path / "bare"
+        root.mkdir()
         monkeypatch.setenv("EIKON_ROOT", str(root))
-        monkeypatch.setenv("EIKON_PROJECT_ROOT", str(former))
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            assert discover_project_root(tmp_path) == root
+        assert discover_project_root(tmp_path) == root.resolve()
 
-    def test_deprecated_variable_alone_works_and_warns(self, tmp_path: Path, monkeypatch):
-        former = self._project(tmp_path / "former")
-        monkeypatch.delenv("EIKON_ROOT", raising=False)
+    def test_retired_variable_is_ignored(self, tmp_path: Path, monkeypatch):
+        former = tmp_path / "former"
+        former.mkdir()
+        (former / "eikon.yml").write_text("{}\n")
+        start = tmp_path / "start"
+        start.mkdir()
         monkeypatch.setenv("EIKON_PROJECT_ROOT", str(former))
-        with pytest.warns(FutureWarning, match="EIKON_PROJECT_ROOT is deprecated.*EIKON_ROOT"):
-            assert discover_project_root(tmp_path) == former
-
-    def test_empty_eikon_root_falls_back_to_deprecated_variable(self, tmp_path: Path, monkeypatch):
-        former = self._project(tmp_path / "former")
-        monkeypatch.setenv("EIKON_ROOT", "  ")
-        monkeypatch.setenv("EIKON_PROJECT_ROOT", str(former))
-        with pytest.warns(FutureWarning, match="EIKON_ROOT"):
-            assert discover_project_root(tmp_path) == former
+        assert discover_project_root(start) == start.resolve()
 
 
 class TestResolvePaths:

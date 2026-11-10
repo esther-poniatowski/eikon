@@ -3,8 +3,7 @@ from pathlib import Path
 import typer
 
 from eikon import load_registry
-from eikon.cli.commands import get_project_root
-from eikon.config._session import ProjectSession
+from eikon.cli._context import session_from_context
 from eikon.render._pipeline import render_figure
 from eikon.spec._parse import parse_figure_file
 
@@ -16,13 +15,15 @@ def cli_render_by_name(
     show: bool = typer.Option(False, "--show", help="Display figure interactively."),
 ) -> None:
     """Render a figure by registry name."""
-    session = ProjectSession.from_config(project_root=get_project_root(ctx))
+    session = session_from_context(ctx)
     reg = load_registry(config=session.config, resolved_paths=session.paths)
 
     entry = reg.get(name)
     raw_path = entry.get("spec_path", "") if isinstance(entry, dict) else ""
     if raw_path:
         spec_path = Path(raw_path)
+        if not spec_path.is_absolute():
+            spec_path = session.paths.project_root / spec_path
     else:
         spec_path = session.paths.specs_dir / f"{name}.yaml"
 

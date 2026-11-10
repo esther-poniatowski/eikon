@@ -3,11 +3,13 @@ from pathlib import Path
 import typer
 import yaml
 
+from eikon.cli._context import USAGE_ERROR
+from eikon.config._defaults import CONFIG_FILENAME
 from eikon.config._validation import validate_config, validate_figure_spec
 
 
 def cli_validate(
-    target: str = typer.Argument(..., help="Path to eikon.yaml or a figure spec YAML file."),
+    target: str = typer.Argument(..., help="Path to eikon.yml or a figure spec YAML file."),
     kind: str = typer.Option(
         "auto",
         "--kind",
@@ -18,7 +20,7 @@ def cli_validate(
     target_path = Path(target).resolve()
     if not target_path.is_file():
         typer.echo(f"File not found: {target_path}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=USAGE_ERROR)
 
     try:
         raw = yaml.safe_load(target_path.read_text(encoding="utf-8"))
@@ -33,10 +35,10 @@ def cli_validate(
     normalized_kind = kind.strip().lower()
     if normalized_kind not in {"auto", "config", "figure"}:
         typer.echo(f"Invalid validation kind: {kind}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=USAGE_ERROR)
 
     if normalized_kind == "config" or (
-        normalized_kind == "auto" and target_path.name == "eikon.yaml"
+        normalized_kind == "auto" and target_path.name == CONFIG_FILENAME
     ):
         errors = validate_config(raw)
         kind = "Configuration"

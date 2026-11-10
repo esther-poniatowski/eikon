@@ -42,7 +42,7 @@ except PackageNotFoundError:
     __version__ = "0.0.0+unknown"
 
 from eikon.config import ProjectConfig, ProjectSession, load_config, resolve_paths  # noqa: E402
-from eikon.config._resolver import ResolvedPaths, locate_config  # noqa: E402
+from eikon.config._resolver import ResolvedPaths  # noqa: E402
 from eikon.ext import ExtensionRegistry  # noqa: E402
 from eikon.export import ExportSpec, batch_export  # noqa: E402
 from eikon.layout import BuiltLayout, LayoutSpec, build_layout  # noqa: E402
@@ -219,16 +219,20 @@ def load_registry(
     Parameters
     ----------
     config : ProjectConfig, optional
-        Project configuration.  If ``None``, uses built-in defaults.
+        Project configuration.  If ``None``, loads the settings file of the
+        project root, or uses built-in defaults when the root holds none.
+    resolved_paths : ResolvedPaths, optional
+        Pre-resolved paths.  If ``None``, resolves them against the root.
+    project_root : Path, optional
+        Explicit project root.  If ``None``, the root is resolved by
+        :func:`discover_project_root`.
 
     Returns
     -------
     Registry
         A loaded registry instance.
     """
-    cfg = config or load_config(
-        path=(locate_config(project_root) or project_root / "eikon.yaml") if project_root is not None else None
-    )
+    cfg = config or load_config(root=project_root)
     paths = resolved_paths or resolve_paths(cfg.paths, project_root=project_root)
 
     registry_path = cfg.registry_file

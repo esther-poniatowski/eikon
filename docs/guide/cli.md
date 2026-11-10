@@ -5,12 +5,15 @@ Eikon provides a command-line interface built on [Typer](https://typer.tiangolo.
 ## Global options
 
 ```bash
-eikon --version          # Show version and exit
-eikon --root DIR         # Set explicit project root
+eikon -v, --version      # Show version and exit
+eikon -r, --root DIR     # Set explicit project root
+eikon -c, --config PATH  # Read another settings file
 eikon --help             # Show available commands
 ```
 
-The `--root` option overrides auto-discovery and the `EIKON_ROOT` environment variable. As a global option, it precedes the command: `eikon --root DIR render specs/fig1.yaml`.
+The `--root` option overrides auto-discovery and the `EIKON_ROOT` environment variable. The `--config` option names a settings file relative to the current folder, in place of `config/tools/eikon.yml` or `eikon.yml` below the root. As global options, both precede the command: `eikon --root DIR render specs/fig1.yaml`. The [configuration guide](configuration.md#project-root-discovery) states the full resolution.
+
+A usage or configuration error, such as an absent `--config` file or two competing settings files, exits with status 2; a validation that finds a problem exits with status 1.
 
 ## Commands
 
@@ -25,8 +28,11 @@ eikon init /path/to/project
 
 Accepts an optional positional `path` argument (defaults to `.`).
 
+Options:
+- `--force` — Overwrite the settings file and the example specs if they exist. Without it, `eikon init` stops with an error that names each existing file, since the researcher may have edited them.
+
 Creates:
-- `eikon.yaml` — Project configuration file
+- `eikon.yml` — Project configuration file, or the existing `config/tools/eikon.yml` when `--force` overwrites it
 - `specs/` — Directory for figure specifications (with two example specs)
 - `styles/` — Directory for custom style files
 - `figures/` — Output directory for exported figures
@@ -37,16 +43,16 @@ Creates:
 Validate a configuration or figure spec YAML file.
 
 ```bash
-eikon validate eikon.yaml
+eikon validate eikon.yml
 eikon validate specs/fig1.yaml
 eikon validate specs/fig1.yaml --kind figure
 ```
 
 Options:
 
-- `--kind` — Validation target kind: `auto` (default), `config`, or `figure`. In `auto` mode, files named `eikon.yaml` are validated as config; all others are validated as figure specs.
+- `--kind` — Validation target kind: `auto` (default), `config`, or `figure`. In `auto` mode, files named `eikon.yml` are validated as config; all others are validated as figure specs.
 
-Outputs validation results with Rich formatting. Returns exit code 1 on validation errors.
+Outputs validation results with Rich formatting. Returns exit code 1 on validation errors, and 2 when the file does not exist.
 
 ### `eikon info`
 
@@ -148,7 +154,7 @@ Options:
 - `--tag`, `-t` — Tags (repeatable)
 - `--group`, `-g` — Group name
 - `--on-conflict` — Conflict strategy: `update` (default), `fail`, or `skip`
-- `--spec-path` — Path to the figure spec file
+- `--spec-path` — Path to the figure spec file, relative to the current folder; the registry stores it relative to the project root
 
 #### `eikon registry remove`
 

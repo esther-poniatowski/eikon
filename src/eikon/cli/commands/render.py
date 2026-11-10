@@ -2,8 +2,7 @@ from pathlib import Path
 
 import typer
 
-from eikon.cli.commands import get_project_root
-from eikon.config._session import ProjectSession
+from eikon.cli._context import USAGE_ERROR, session_from_context
 from eikon.render._pipeline import render_figure
 from eikon.spec._parse import parse_figure_file
 
@@ -20,7 +19,7 @@ def cli_render(
     target_path = Path(spec_path).resolve()
     if not target_path.is_file():
         typer.echo(f"Spec file not found: {target_path}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=USAGE_ERROR)
 
     try:
         figure_spec = parse_figure_file(target_path)
@@ -30,8 +29,8 @@ def cli_render(
 
     fmt_tuple = tuple(formats) if formats else ()
 
+    session = session_from_context(ctx)
     try:
-        session = ProjectSession.from_config(project_root=get_project_root(ctx))
         handle = render_figure(
             figure_spec,
             session=session,

@@ -4,17 +4,31 @@ from pathlib import Path
 import typer
 
 from eikon import load_registry
-from eikon.cli.commands import get_project_root
-from eikon.config._session import ProjectSession
+from eikon.cli._context import session_from_context
 from eikon.exceptions import RegistryError
 from eikon.registry import Registry
 
 app = typer.Typer(add_completion=False, help="Manage the figure registry")
 
 
-def _load_reg(project_root: Path | None = None) -> Registry:
-    session = ProjectSession.from_config(project_root=project_root)
+def _load_reg(ctx: typer.Context) -> Registry:
+    session = session_from_context(ctx)
     return load_registry(config=session.config, resolved_paths=session.paths)
+
+
+def _stored_spec_path(spec_path: str, root: Path) -> str | None:
+    """Return the spec path to store in the registry, relative to *root* when it lies below it.
+
+    The command line gives the path relative to the current folder, and the registry keeps it
+    relative to the project root, which ``render-registry`` reads it against.
+    """
+    if not spec_path:
+        return None
+    resolved = Path(spec_path).resolve()
+    try:
+        return resolved.relative_to(root).as_posix()
+    except ValueError:
+        return str(resolved)
 
 
 @app.command("list")
@@ -28,7 +42,7 @@ def registry_list(
         False, "--match-all", help="Require all tags to match."
     ),
 ) -> None:
-    reg = _load_reg(get_project_root(ctx))
+    reg = _load_reg(ctx)
 
     if tags or group:
         entries = reg.query(tags=tuple(tags), group=group, match_all_tags=match_all)
@@ -63,10 +77,14 @@ def registry_add(
     spec_path: str = typer.Option(
         "",
         "--spec-path",
-        help="Path to the figure spec YAML file (stored in registry metadata).",
+        help=(
+            "Path to the figure spec YAML file, relative to the current folder; "
+            "the registry stores it relative to the project root."
+        ),
     ),
 ) -> None:
-    reg = _load_reg(get_project_root(ctx))
+    session = session_from_context(ctx)
+    reg = load_registry(config=session.config, resolved_paths=session.paths)
 
     try:
         reg.register(
@@ -74,7 +92,7 @@ def registry_add(
             tags=tuple(tags),
             group=group,
             on_conflict=on_conflict,  # type: ignore[arg-type]
-            spec_path=spec_path or None,
+            spec_path=_stored_spec_path(spec_path, session.paths.project_root),
         )
         reg.save()
     except RegistryError as exc:
@@ -89,7 +107,7 @@ def registry_remove(
     ctx: typer.Context,
     name: str = typer.Argument(..., help="Figure name to remove."),
 ) -> None:
-    reg = _load_reg(get_project_root(ctx))
+    reg = _load_reg(ctx)
 
     try:
         reg.remove(name)
@@ -106,7 +124,7 @@ def registry_show(
     ctx: typer.Context,
     name: str = typer.Argument(..., help="Figure name to show."),
 ) -> None:
-    reg = _load_reg(get_project_root(ctx))
+    reg = _load_reg(ctx)
 
     try:
         entry = reg.get(name)

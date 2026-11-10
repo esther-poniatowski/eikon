@@ -8,6 +8,7 @@ __all__ = [
     "EikonError",
     "ConfigError",
     "ConfigNotFoundError",
+    "ConfigConflictError",
     "ConfigValidationError",
     "SpecError",
     "SpecValidationError",
@@ -34,13 +35,25 @@ class ConfigError(EikonError):
 
 
 class ConfigNotFoundError(ConfigError):
-    """No ``eikon.yaml`` found in the project hierarchy."""
+    """A settings file named explicitly, by ``--config`` or by a path argument, does not exist."""
 
-    def __init__(self, search_root: str = ".") -> None:
+    def __init__(self, path: str) -> None:
+        super().__init__(f"Settings file not found: {path}")
+
+
+class ConfigConflictError(ConfigError):
+    """A project root holds both ``config/tools/eikon.yml`` and ``eikon.yml``.
+
+    Parameters
+    ----------
+    paths : list[str]
+        The competing settings files.
+    """
+
+    def __init__(self, paths: list[str]) -> None:
+        self.paths = paths
         super().__init__(
-            f"No eikon.yaml found searching upward from {search_root!r}, in config/tools/ or at a root. "
-            "Pass --root or set EIKON_ROOT to name the project root, "
-            "or run 'eikon init' to create a project configuration."
+            f"Two settings files compete: {' and '.join(paths)}. Keep one of them."
         )
 
 

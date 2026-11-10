@@ -7,20 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+The command line follows the [command-line conventions](https://github.com/esther-poniatowski/keystone/blob/main/docs/internals/cli-conventions.md) of the workspace tools. Each renamed name loses its former name in this release, without an alias or a fallback.
+
 ### Added
 
-- The configuration file is also found in `config/tools/eikon.yaml` below the project root. When the root holds both `config/tools/eikon.yaml` and `eikon.yaml`, the file in `config/tools/` takes precedence.
+- The configuration file is also found in `config/tools/eikon.yml` below the project root.
+- The global option `-c`, `--config PATH` names the settings file, relative to the current folder. A file named by `--config` and absent is an error.
+- The global option `--root` takes the short form `-r`.
+- `eikon init --force` overwrites the settings file and the example specs.
 
 ### Changed
 
-- The global option `--project-root` is renamed `--root`, after the [command-line conventions](https://github.com/esther-poniatowski/keystone/blob/main/docs/internals/cli-conventions.md) of the workspace tools.
-- The environment variable `EIKON_PROJECT_ROOT` is renamed `EIKON_ROOT`. When both are set, `EIKON_ROOT` takes precedence.
-- The error raised when no `eikon.yaml` is found names `--root` and `EIKON_ROOT`.
+- The settings file `eikon.yaml` is renamed `eikon.yml`. Eikon no longer reads `eikon.yaml`: rename the file in each project.
+- The global option `--project-root` is renamed `--root`. `--project-root` is no longer accepted.
+- The environment variable `EIKON_PROJECT_ROOT` is renamed `EIKON_ROOT`. `EIKON_PROJECT_ROOT` is no longer read.
+- The root is the nearest ancestor of the current folder that holds `config/tools/eikon.yml` or `eikon.yml`, and otherwise the current folder. Without any settings file, Eikon runs on its built-in defaults instead of stopping with an error.
+- A root holding both `config/tools/eikon.yml` and `eikon.yml` is an error that names both files, instead of a silent precedence.
+- `eikon init` refuses to overwrite an existing example spec, as it already refused an existing settings file, and names each existing file.
+- `eikon registry add --spec-path` reads the path relative to the current folder and stores it relative to the project root; `eikon render-registry` reads a stored relative path against the project root.
+- A usage or configuration error exits with status 2: an absent or invalid settings file, two competing settings files, an absent file argument of `validate` or `render`, an invalid `--kind`, and a refusal of `eikon init` to overwrite.
+- `ConfigNotFoundError` now reports an absent explicit settings file; the new `ConfigConflictError` reports two competing settings files.
 
-### Deprecated
+### Fixed
 
-- `--project-root` remains for one release as a hidden alias of `--root`, and prints a warning to the standard error that names `--root`. When both options are given, `--root` takes precedence.
-- `EIKON_PROJECT_ROOT` is still read for one release when `EIKON_ROOT` is absent, and reading it issues a `FutureWarning` that names `EIKON_ROOT`.
+- `import eikon.cli` and `python -m eikon` no longer fail on a circular import: the commands build their project session in `eikon.cli._context`.
 
 ## [0.1.0] - 2026-02-11
 

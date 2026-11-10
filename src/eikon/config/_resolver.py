@@ -3,33 +3,28 @@
 Resolves relative paths from :class:`PathsConfig` against a discovered
 or explicit project root directory.
 
-Project root resolution uses a three-tier strategy:
+Project root resolution follows the command-line conventions of the workspace tools, and stops at
+the first answer:
 
 1. Explicit ``project_root`` parameter (or ``--root`` CLI option).
 2. ``EIKON_ROOT`` environment variable.
-3. Auto-discovery: walk upward from cwd until a directory holds ``eikon.yaml``, in its
-   ``config/tools/`` or at the directory itself.
+3. The nearest ancestor of the current folder that holds ``eikon.yml``, in its ``config/tools/``
+   or at its own level.
+4. The current folder.
 """
 
 import os
-import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
 from eikon.config._defaults import CONFIG_LOCATIONS
 from eikon.config._schema import PathsConfig
-from eikon.exceptions import ConfigNotFoundError
+from eikon.exceptions import ConfigConflictError
 
 __all__ = ["ResolvedPaths", "resolve_paths", "discover_project_root", "locate_config"]
 
 EIKON_ROOT_ENV = "EIKON_ROOT"
 """Environment variable name for explicit project root override."""
-
-DEPRECATED_ROOT_ENV = "EIKON_PROJECT_ROOT"
-"""Former name of :data:`EIKON_ROOT_ENV`, read with a warning when ``EIKON_ROOT`` is absent.
-
-Deprecated: to be removed in the release after the one that introduced ``EIKON_ROOT``.
-"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,8 +51,12 @@ class ResolvedPaths:
 def locate_config(root: Path) -> Path | None:
     """Return the configuration file of a project root, or ``None`` when it holds none.
 
-    The file sits in ``config/tools/eikon.yaml`` or at the root itself, ``eikon.yaml``; the file in
-    ``config/tools/`` takes precedence when both exist.
+    The file sits in ``config/tools/eikon.yml`` or at the root itself, ``eikon.yml``.
+
+    Raises
+    ------
+    ConfigConflictError
+        If the root holds both files, so that neither silently wins.
 
     Examples
     --------
@@ -65,29 +64,36 @@ def locate_config(root: Path) -> Path | None:
     >>> root = Path(tempfile.mkdtemp())
     >>> locate_config(root) is None
     True
-    >>> _ = (root / "eikon.yaml").write_text("{}")
-    >>> locate_config(root).relative_to(root).as_posix()
-    'eikon.yaml'
     >>> (root / "config" / "tools").mkdir(parents=True)
-    >>> _ = (root / "config" / "tools" / "eikon.yaml").write_text("{}")
+    >>> _ = (root / "config" / "tools" / "eikon.yml").write_text("{}")
     >>> locate_config(root).relative_to(root).as_posix()
-    'config/tools/eikon.yaml'
+    'config/tools/eikon.yml'
+    >>> _ = (root / "eikon.yml").write_text("{}")
+    >>> locate_config(root)
+    Traceback (most recent call last):
+    ...
+    eikon.exceptions.ConfigConflictError: Two settings files compete: ...
     """
-    for location in CONFIG_LOCATIONS:
-        candidate = root / location
-        if candidate.is_file():
-            return candidate
-    return None
+    found = [root / location for location in CONFIG_LOCATIONS if (root / location).is_file()]
+    if len(found) > 1:
+        raise ConfigConflictError([str(path) for path in found])
+    return found[0] if found else None
+
+
+def _holds_config(directory: Path) -> bool:
+    """Return whether *directory* holds a configuration file at one of its places."""
+    return any((directory / location).is_file() for location in CONFIG_LOCATIONS)
 
 
 def discover_project_root(start: Path | None = None) -> Path:
-    """Resolve the project root using the three-tier strategy.
+    """Resolve the project root when no explicit root is given.
 
     Resolution order:
 
     1. ``EIKON_ROOT`` environment variable (if set and non-empty).
-    2. Walk upward from *start* (defaults to cwd) until a directory holds
-       ``config/tools/eikon.yaml`` or ``eikon.yaml``.
+    2. The nearest ancestor of *start*, *start* included, that holds
+       ``config/tools/eikon.yml`` or ``eikon.yml``.
+    3. *start* itself, where eikon then runs on its built-in defaults.
 
     Use the *start* parameter or the env var for environments where the
     working directory is unreliable (CI runners, notebook kernels).
@@ -102,48 +108,16 @@ def discover_project_root(start: Path | None = None) -> Path:
     -------
     Path
         Absolute path to the project root.
-
-    Raises
-    ------
-    ConfigNotFoundError
-        If no ``eikon.yaml`` is found via any method.
     """
-    # Tier 2: environment variable
-    env_root = _root_from_environment()
+    env_root = os.environ.get(EIKON_ROOT_ENV, "").strip()
     if env_root:
-        root = Path(env_root).resolve()
-        if locate_config(root) is not None:
-            return root
-        raise ConfigNotFoundError(str(root))
+        return Path(env_root).resolve()
 
-    # Tier 3: upward walk
     current = (start or Path.cwd()).resolve()
     for directory in (current, *current.parents):
-        if locate_config(directory) is not None:
+        if _holds_config(directory):
             return directory
-    raise ConfigNotFoundError(str(current))
-
-
-def _root_from_environment() -> str:
-    """Return the project root named by the environment, or an empty string when none is named.
-
-    ``EIKON_ROOT`` takes precedence.  The deprecated ``EIKON_PROJECT_ROOT`` is read only when
-    ``EIKON_ROOT`` is absent or empty, and reading it issues a :class:`FutureWarning`, which Python
-    shows to end users by default.  The warning keeps the location of this function, so that the
-    default filter shows it once per process however many callers resolve the root.
-    """
-    root = os.environ.get(EIKON_ROOT_ENV, "").strip()
-    if root:
-        return root
-    deprecated_root = os.environ.get(DEPRECATED_ROOT_ENV, "").strip()
-    if deprecated_root:
-        warnings.warn(
-            f"{DEPRECATED_ROOT_ENV} is deprecated and will be removed in the next release; "
-            f"set {EIKON_ROOT_ENV} instead.",
-            FutureWarning,
-            stacklevel=1,
-        )
-    return deprecated_root
+    return current
 
 
 def resolve_paths(
@@ -158,8 +132,8 @@ def resolve_paths(
         Path configuration with relative paths.
     project_root : Path, optional
         Explicit project root (tier 1 — highest priority).  If ``None``,
-        falls back to the env var / auto-discovery tiers via
-        :func:`discover_project_root`.
+        falls back to the environment variable, the upward search and the
+        current folder via :func:`discover_project_root`.
 
     Returns
     -------

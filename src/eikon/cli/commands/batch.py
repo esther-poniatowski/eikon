@@ -4,8 +4,7 @@ import typer
 from rich.console import Console
 from rich.progress import Progress
 
-from eikon.cli.commands import get_project_root
-from eikon.config._session import ProjectSession
+from eikon.cli._context import session_from_context
 from eikon.render._pipeline import render_figure
 from eikon.spec._parse import parse_figure_file
 
@@ -33,7 +32,7 @@ def cli_batch(
     console = Console(stderr=True)
     fmt_tuple = tuple(formats) if formats else ()
 
-    session = ProjectSession.from_config(project_root=get_project_root(ctx))
+    session = session_from_context(ctx)
 
     if specs:
         spec_paths = [Path(s).resolve() for s in specs]

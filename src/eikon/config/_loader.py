@@ -1,6 +1,6 @@
 """YAML configuration loading and deep merging.
 
-Loads ``eikon.yaml`` from disk, validates the content, and constructs a
+Loads ``eikon.yml`` from disk, validates the content, and constructs a
 :class:`ProjectConfig` with proper layered merging of defaults.
 """
 
@@ -10,7 +10,7 @@ from typing import Any
 import yaml
 
 from eikon._types import ExportFormat
-from eikon.config._defaults import CONFIG_FILENAME, DEFAULT_CONFIG
+from eikon.config._defaults import DEFAULT_CONFIG
 from eikon.config._resolver import discover_project_root, locate_config
 from eikon.config._schema import (
     ExportDefaults,
@@ -24,37 +24,44 @@ from eikon.exceptions import ConfigError, ConfigNotFoundError, ConfigValidationE
 __all__ = ["load_config", "merge_configs"]
 
 
-def load_config(path: Path | None = None) -> ProjectConfig:
+def load_config(path: Path | None = None, *, root: Path | None = None) -> ProjectConfig:
     """Load and validate the project configuration.
 
     Parameters
     ----------
     path : Path, optional
-        Explicit path to an ``eikon.yaml`` file.  If ``None``, the file is
-        discovered by walking upward from the current working directory, at
-        the root of a project or in its ``config/tools/``.
+        Explicit path to a settings file, as given by ``--config``.  If
+        ``None``, the file is located below the project *root*, in its
+        ``config/tools/`` or at its own level.
+    root : Path, optional
+        Project root below which the file is located when *path* is ``None``.
+        If ``None``, the root is resolved by :func:`discover_project_root`.
 
     Returns
     -------
     ProjectConfig
-        Validated project configuration.
+        Validated project configuration, or the built-in defaults when
+        *path* is ``None`` and the root holds no settings file.
 
     Raises
     ------
     ConfigNotFoundError
-        If no configuration file is found.
+        If the explicit *path* does not exist.
+    ConfigConflictError
+        If the root holds both ``config/tools/eikon.yml`` and ``eikon.yml``.
     ConfigValidationError
         If the configuration fails schema validation.
     ConfigError
         If the YAML file cannot be parsed.
     """
     if path is None:
-        root = discover_project_root()
-        path = locate_config(root) or root / CONFIG_FILENAME
+        path = locate_config((root or discover_project_root()).resolve())
+        if path is None:
+            return DEFAULT_CONFIG
 
     path = path.resolve()
     if not path.is_file():
-        raise ConfigNotFoundError(str(path.parent))
+        raise ConfigNotFoundError(str(path))
 
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -82,7 +89,7 @@ def merge_configs(base: ProjectConfig, override: dict[str, Any]) -> ProjectConfi
     base : ProjectConfig
         The base configuration to merge onto.
     override : dict
-        A dictionary of overrides (same structure as ``eikon.yaml``).
+        A dictionary of overrides (same structure as ``eikon.yml``).
 
     Returns
     -------

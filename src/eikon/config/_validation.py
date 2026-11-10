@@ -54,7 +54,7 @@ def validate_config(raw: dict[str, Any]) -> list[str]:
     Parameters
     ----------
     raw : dict
-        Dictionary loaded from ``eikon.yaml``.
+        Dictionary loaded from ``eikon.yml``.
 
     Returns
     -------

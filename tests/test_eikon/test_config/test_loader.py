@@ -7,12 +7,12 @@ import pytest
 from eikon._types import ExportFormat
 from eikon.config._loader import load_config, merge_configs
 from eikon.config._schema import ProjectConfig
-from eikon.exceptions import ConfigNotFoundError, ConfigValidationError
+from eikon.exceptions import ConfigConflictError, ConfigNotFoundError, ConfigValidationError
 
 
 class TestLoadConfig:
     def test_loads_from_project(self, tmp_project: Path):
-        config = load_config(tmp_project / "eikon.yaml")
+        config = load_config(tmp_project / "eikon.yml")
         assert isinstance(config, ProjectConfig)
         assert config.export.dpi == 300
         assert config.style.font_family == "serif"
@@ -21,20 +21,37 @@ class TestLoadConfig:
         with pytest.raises(ConfigNotFoundError):
             load_config(tmp_path / "nonexistent.yaml")
 
+    def test_root_without_settings_file_returns_defaults(self, tmp_path: Path):
+        assert load_config(root=tmp_path) == ProjectConfig()
+
+    def test_reads_config_tools_below_root(self, tmp_path: Path):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        (tmp_path / "config" / "tools" / "eikon.yml").write_text(
+            "export:\n  dpi: 150\n", encoding="utf-8"
+        )
+        assert load_config(root=tmp_path).export.dpi == 150
+
+    def test_conflicting_settings_files_raise(self, tmp_path: Path):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        (tmp_path / "config" / "tools" / "eikon.yml").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "eikon.yml").write_text("{}\n", encoding="utf-8")
+        with pytest.raises(ConfigConflictError):
+            load_config(root=tmp_path)
+
     def test_empty_yaml_returns_defaults(self, tmp_path: Path):
-        cfg = tmp_path / "eikon.yaml"
+        cfg = tmp_path / "eikon.yml"
         cfg.write_text("", encoding="utf-8")
         config = load_config(cfg)
         assert config == ProjectConfig()
 
     def test_invalid_yaml_raises(self, tmp_path: Path):
-        cfg = tmp_path / "eikon.yaml"
+        cfg = tmp_path / "eikon.yml"
         cfg.write_text("{{invalid", encoding="utf-8")
         with pytest.raises(Exception):
             load_config(cfg)
 
     def test_validation_error(self, tmp_path: Path):
-        cfg = tmp_path / "eikon.yaml"
+        cfg = tmp_path / "eikon.yml"
         cfg.write_text("export:\n  dpi: -1\n", encoding="utf-8")
         with pytest.raises(ConfigValidationError):
             load_config(cfg)
