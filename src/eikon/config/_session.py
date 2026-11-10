@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from eikon.config._loader import load_config
-from eikon.config._resolver import ResolvedPaths, resolve_paths
+from eikon.config._resolver import ResolvedPaths, locate_config, resolve_paths
 from eikon.config._schema import ProjectConfig
 from eikon.exceptions import ConfigNotFoundError
 
@@ -66,7 +66,7 @@ class ProjectSession:
         else:
             try:
                 config_path = (
-                    (project_root.resolve() / "eikon.yaml")
+                    (locate_config(project_root.resolve()) or project_root.resolve() / "eikon.yaml")
                     if project_root is not None
                     else None
                 )

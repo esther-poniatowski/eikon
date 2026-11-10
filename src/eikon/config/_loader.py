@@ -11,7 +11,7 @@ import yaml
 
 from eikon._types import ExportFormat
 from eikon.config._defaults import CONFIG_FILENAME, DEFAULT_CONFIG
-from eikon.config._resolver import discover_project_root
+from eikon.config._resolver import discover_project_root, locate_config
 from eikon.config._schema import (
     ExportDefaults,
     PathsConfig,
@@ -31,7 +31,8 @@ def load_config(path: Path | None = None) -> ProjectConfig:
     ----------
     path : Path, optional
         Explicit path to an ``eikon.yaml`` file.  If ``None``, the file is
-        discovered by walking upward from the current working directory.
+        discovered by walking upward from the current working directory, at
+        the root of a project or in its ``config/tools/``.
 
     Returns
     -------
@@ -49,7 +50,7 @@ def load_config(path: Path | None = None) -> ProjectConfig:
     """
     if path is None:
         root = discover_project_root()
-        path = root / CONFIG_FILENAME
+        path = locate_config(root) or root / CONFIG_FILENAME
 
     path = path.resolve()
     if not path.is_file():

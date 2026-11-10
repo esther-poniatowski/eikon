@@ -8,7 +8,7 @@ Built-in defaults → eikon.yaml → Figure-level overrides → Runtime kwargs
 
 ## Project configuration file
 
-The main configuration file is `eikon.yaml`, placed at the project root. Run `eikon init` to generate a template.
+The main configuration file is `eikon.yaml`, placed at the project root or in its `config/tools/` folder. A project that keeps the settings of its tools off its root uses `config/tools/eikon.yaml`. When both files exist, the file at the root takes precedence. Run `eikon init` to generate a template.
 
 ### Full schema
 
@@ -51,7 +51,7 @@ Eikon locates the project root using a three-tier strategy:
 
 1. **`--project-root` CLI flag** (highest priority)
 2. **`EIKON_PROJECT_ROOT` environment variable**
-3. **Auto-discovery**: walk upward from the current working directory until `eikon.yaml` is found
+3. **Auto-discovery**: walk upward from the current working directory until a directory holds `eikon.yaml` or `config/tools/eikon.yaml`
 
 Eikon commands can therefore run from any subdirectory of the project.
 

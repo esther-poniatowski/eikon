@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from eikon.config._resolver import discover_project_root, resolve_paths
+from eikon.config._resolver import discover_project_root, locate_config, resolve_paths
 from eikon.config._schema import PathsConfig
 from eikon.exceptions import ConfigNotFoundError
 
@@ -22,6 +22,24 @@ class TestDiscoverProjectRoot:
     def test_raises_when_not_found(self, tmp_path: Path):
         with pytest.raises(ConfigNotFoundError):
             discover_project_root(tmp_path)
+
+    def test_finds_config_in_config_tools(self, tmp_path: Path):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        (tmp_path / "config" / "tools" / "eikon.yaml").write_text("{}\n")
+        (tmp_path / "specs").mkdir()
+        assert discover_project_root(tmp_path / "specs") == tmp_path.resolve()
+
+    def test_root_file_takes_precedence(self, tmp_path: Path):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        (tmp_path / "config" / "tools" / "eikon.yaml").write_text("{}\n")
+        (tmp_path / "eikon.yaml").write_text("{}\n")
+        assert locate_config(tmp_path) == tmp_path / "eikon.yaml"
+
+    def test_env_root_accepts_config_tools(self, tmp_path: Path, monkeypatch):
+        (tmp_path / "config" / "tools").mkdir(parents=True)
+        (tmp_path / "config" / "tools" / "eikon.yaml").write_text("{}\n")
+        monkeypatch.setenv("EIKON_PROJECT_ROOT", str(tmp_path))
+        assert discover_project_root() == tmp_path.resolve()
 
 
 class TestResolvePaths:

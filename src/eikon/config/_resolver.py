@@ -7,18 +7,19 @@ Project root resolution uses a three-tier strategy:
 
 1. Explicit ``project_root`` parameter (or ``--project-root`` CLI flag).
 2. ``EIKON_PROJECT_ROOT`` environment variable.
-3. Auto-discovery: walk upward from cwd until ``eikon.yaml`` is found.
+3. Auto-discovery: walk upward from cwd until a directory holds ``eikon.yaml``, at its root or in
+   ``config/tools/``.
 """
 
 import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from eikon.config._defaults import CONFIG_FILENAME
+from eikon.config._defaults import CONFIG_LOCATIONS
 from eikon.config._schema import PathsConfig
 from eikon.exceptions import ConfigNotFoundError
 
-__all__ = ["ResolvedPaths", "resolve_paths", "discover_project_root"]
+__all__ = ["ResolvedPaths", "resolve_paths", "discover_project_root", "locate_config"]
 
 EIKON_PROJECT_ROOT_ENV = "EIKON_PROJECT_ROOT"
 """Environment variable name for explicit project root override."""
@@ -45,14 +46,38 @@ class ResolvedPaths:
     """Absolute path to the data directory."""
 
 
+def locate_config(root: Path) -> Path | None:
+    """Return the configuration file of a project root, or ``None`` when it holds none.
+
+    The file sits at the root itself, ``eikon.yaml``, or in ``config/tools/eikon.yaml``; the root
+    takes precedence when both exist.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> root = Path(tempfile.mkdtemp())
+    >>> locate_config(root) is None
+    True
+    >>> (root / "config" / "tools").mkdir(parents=True)
+    >>> _ = (root / "config" / "tools" / "eikon.yaml").write_text("{}")
+    >>> locate_config(root).relative_to(root).as_posix()
+    'config/tools/eikon.yaml'
+    """
+    for location in CONFIG_LOCATIONS:
+        candidate = root / location
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def discover_project_root(start: Path | None = None) -> Path:
     """Resolve the project root using the three-tier strategy.
 
     Resolution order:
 
     1. ``EIKON_PROJECT_ROOT`` environment variable (if set and non-empty).
-    2. Walk upward from *start* (defaults to cwd) until ``eikon.yaml`` is
-       found.
+    2. Walk upward from *start* (defaults to cwd) until a directory holds
+       ``eikon.yaml`` or ``config/tools/eikon.yaml``.
 
     Use the *start* parameter or the env var for environments where the
     working directory is unreliable (CI runners, notebook kernels).
@@ -77,14 +102,14 @@ def discover_project_root(start: Path | None = None) -> Path:
     env_root = os.environ.get(EIKON_PROJECT_ROOT_ENV, "").strip()
     if env_root:
         root = Path(env_root).resolve()
-        if (root / CONFIG_FILENAME).is_file():
+        if locate_config(root) is not None:
             return root
         raise ConfigNotFoundError(str(root))
 
     # Tier 3: upward walk
     current = (start or Path.cwd()).resolve()
     for directory in (current, *current.parents):
-        if (directory / CONFIG_FILENAME).is_file():
+        if locate_config(directory) is not None:
             return directory
     raise ConfigNotFoundError(str(current))
 
