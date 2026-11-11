@@ -219,7 +219,7 @@ def load_registry(
     Parameters
     ----------
     config : ProjectConfig, optional
-        Project configuration.  If ``None``, loads the settings file of the
+        Project configuration.  If ``None``, loads the configuration file of the
         project root, or uses built-in defaults when the root holds none.
     resolved_paths : ResolvedPaths, optional
         Pre-resolved paths.  If ``None``, resolves them against the root.

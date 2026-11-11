@@ -7,13 +7,13 @@ Eikon provides a command-line interface built on [Typer](https://typer.tiangolo.
 ```bash
 eikon -v, --version      # Show version and exit
 eikon -r, --root DIR     # Set explicit project root
-eikon -c, --config PATH  # Read another settings file
+eikon -c, --config PATH  # Read another configuration file
 eikon --help             # Show available commands
 ```
 
-The `--root` option overrides auto-discovery and the `EIKON_ROOT` environment variable. The `--config` option names a settings file relative to the current folder, in place of `config/tools/eikon.yml` or `eikon.yml` below the root. As global options, both precede the command: `eikon --root DIR render specs/fig1.yaml`. The [configuration guide](configuration.md#project-root-discovery) states the full resolution.
+The `--root` option overrides auto-discovery and the `EIKON_ROOT` environment variable. The `--config` option names a configuration file relative to the current folder, in place of `config/tools/eikon.yml` or `eikon.yml` below the root. As global options, both precede the command: `eikon --root DIR render specs/fig1.yaml`. The [configuration guide](configuration.md#project-root-discovery) states the full resolution.
 
-A usage or configuration error, such as an absent `--config` file or two competing settings files, exits with status 2; a validation that finds a problem exits with status 1.
+A usage or configuration error, such as an absent `--config` file or two competing configuration files, exits with status 2; a validation that finds a problem exits with status 1.
 
 ## Commands
 
@@ -29,7 +29,7 @@ eikon init /path/to/project
 Accepts an optional positional `path` argument (defaults to `.`).
 
 Options:
-- `--force` — Overwrite the settings file and the example specs if they exist. Without it, `eikon init` stops with an error that names each existing file, since the researcher may have edited them.
+- `--force` — Overwrite the configuration file and the example specs if they exist. Without it, `eikon init` stops with an error that names each existing file, since the researcher may have edited them.
 
 Creates:
 - `eikon.yml` — Project configuration file, or the existing `config/tools/eikon.yml` when `--force` overwrites it

@@ -35,10 +35,10 @@ class ConfigError(EikonError):
 
 
 class ConfigNotFoundError(ConfigError):
-    """A settings file named explicitly, by ``--config`` or by a path argument, does not exist."""
+    """A configuration file named by ``--config`` or by a path argument does not exist."""
 
     def __init__(self, path: str) -> None:
-        super().__init__(f"Settings file not found: {path}")
+        super().__init__(f"Configuration file not found: {path}")
 
 
 class ConfigConflictError(ConfigError):
@@ -47,13 +47,13 @@ class ConfigConflictError(ConfigError):
     Parameters
     ----------
     paths : list[str]
-        The competing settings files.
+        The competing configuration files.
     """
 
     def __init__(self, paths: list[str]) -> None:
         self.paths = paths
         super().__init__(
-            f"Two settings files compete: {' and '.join(paths)}. Keep one of them."
+            f"Two configuration files compete: {' and '.join(paths)}. Keep one of them."
         )
 
 

@@ -83,7 +83,7 @@ eikon render specs/example.yaml --format pdf --format svg
 | ----- | ------- |
 | [Installation](docs/guide/installation.md) | Prerequisites, pip/source setup |
 | [Usage](docs/guide/usage.md) | Project setup, figure specs, rendering, export, registry |
-| [Configuration](docs/guide/configuration.md) | `eikon.yml` settings, paths, export defaults |
+| [Configuration](docs/guide/configuration.md) | The configuration file `eikon.yml`, paths, export defaults |
 | [Specifications](docs/guide/specifications.md) | Figure and panel spec reference |
 | [Styles](docs/guide/styles.md) | Style sheets, presets, composition |
 | [Layouts](docs/guide/layouts.md) | Grid layouts, shared axes, colorbars, insets |

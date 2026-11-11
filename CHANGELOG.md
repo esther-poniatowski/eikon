@@ -12,21 +12,21 @@ The command line follows the [command-line conventions](https://github.com/esthe
 ### Added
 
 - The configuration file is also found in `config/tools/eikon.yml` below the project root.
-- The global option `-c`, `--config PATH` names the settings file, relative to the current folder. A file named by `--config` and absent is an error.
+- The global option `-c`, `--config PATH` names the configuration file, relative to the current folder. A file named by `--config` and absent is an error.
 - The global option `--root` takes the short form `-r`.
-- `eikon init --force` overwrites the settings file and the example specs.
+- `eikon init --force` overwrites the configuration file and the example specs.
 
 ### Changed
 
-- The settings file `eikon.yaml` is renamed `eikon.yml`. Eikon no longer reads `eikon.yaml`: rename the file in each project.
+- The configuration file `eikon.yaml` is renamed `eikon.yml`. Eikon no longer reads `eikon.yaml`: rename the file in each project.
 - The global option `--project-root` is renamed `--root`. `--project-root` is no longer accepted.
 - The environment variable `EIKON_PROJECT_ROOT` is renamed `EIKON_ROOT`. `EIKON_PROJECT_ROOT` is no longer read.
-- The root is the nearest ancestor of the current folder that holds `config/tools/eikon.yml` or `eikon.yml`, and otherwise the current folder. Without any settings file, Eikon runs on its built-in defaults instead of stopping with an error.
+- The root is the nearest ancestor of the current folder that holds `config/tools/eikon.yml` or `eikon.yml`, and otherwise the current folder. Without any configuration file, Eikon runs on its built-in defaults instead of stopping with an error.
 - A root holding both `config/tools/eikon.yml` and `eikon.yml` is an error that names both files, instead of a silent precedence.
-- `eikon init` refuses to overwrite an existing example spec, as it already refused an existing settings file, and names each existing file.
+- `eikon init` refuses to overwrite an existing example spec, as it already refused an existing configuration file, and names each existing file.
 - `eikon registry add --spec-path` reads the path relative to the current folder and stores it relative to the project root; `eikon render-registry` reads a stored relative path against the project root.
-- A usage or configuration error exits with status 2: an absent or invalid settings file, two competing settings files, an absent file argument of `validate` or `render`, an invalid `--kind`, and a refusal of `eikon init` to overwrite.
-- `ConfigNotFoundError` now reports an absent explicit settings file; the new `ConfigConflictError` reports two competing settings files.
+- A usage or configuration error exits with status 2: an absent or invalid configuration file, two competing configuration files, an absent file argument of `validate` or `render`, an invalid `--kind`, and a refusal of `eikon init` to overwrite.
+- `ConfigNotFoundError` now reports an absent explicit configuration file; the new `ConfigConflictError` reports two competing configuration files.
 
 ### Fixed
 

@@ -48,8 +48,8 @@ class ProjectSession:
             :func:`resolve_paths` as tier-1 override.  If ``None``, the root
             is resolved by :func:`discover_project_root`.
         config_path : Path, optional
-            Explicit settings file, as given by ``--config``, read relative
-            to the current folder.  If ``None``, the settings file is located
+            Explicit configuration file, as given by ``--config``, read relative
+            to the current folder.  If ``None``, the configuration file is located
             below the root; a root without one yields the built-in defaults.
         strict : bool
             If ``True`` (default), let :class:`ConfigNotFoundError`

@@ -8,9 +8,9 @@ Built-in defaults → eikon.yml → Figure-level overrides → Runtime kwargs
 
 ## Project configuration file
 
-The main configuration file is `eikon.yml`, placed in the `config/tools/` folder of the project root or at the root itself. A project that keeps the settings of its tools off its root uses `config/tools/eikon.yml`. When both files exist, Eikon stops with an error that names both. Without any settings file, Eikon runs on its built-in defaults. Run `eikon init` to generate a template.
+The main configuration file is `eikon.yml`, placed in the `config/tools/` folder of the project root or at the root itself. A project that keeps the configuration files of its tools off its root uses `config/tools/eikon.yml`. When both files exist, Eikon stops with an error that names both. Without any configuration file, Eikon runs on its built-in defaults. Run `eikon init` to generate a template.
 
-The global option `-c`, `--config PATH` names another settings file, relative to the current folder; a file named by `--config` and absent is an error. The paths written in the settings file are relative to the project root, wherever the file lies, so that the file moves between the root and `config/tools/` without an edit.
+The global option `-c`, `--config PATH` names another configuration file, relative to the current folder; a file named by `--config` and absent is an error. The paths written in the configuration file are relative to the project root, wherever the file lies, so that the file moves between the root and `config/tools/` without an edit.
 
 ### Full schema
 
@@ -66,7 +66,7 @@ eikon --root /path/to/project render specs/fig.yaml
 export EIKON_ROOT=/path/to/project
 eikon render specs/fig.yaml
 
-# Another settings file, relative to the current folder
+# Another configuration file, relative to the current folder
 eikon --config settings/figures.yml render specs/fig.yaml
 ```
 

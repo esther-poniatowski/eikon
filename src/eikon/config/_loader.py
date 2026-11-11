@@ -30,7 +30,7 @@ def load_config(path: Path | None = None, *, root: Path | None = None) -> Projec
     Parameters
     ----------
     path : Path, optional
-        Explicit path to a settings file, as given by ``--config``.  If
+        Explicit path to a configuration file, as given by ``--config``.  If
         ``None``, the file is located below the project *root*, in its
         ``config/tools/`` or at its own level.
     root : Path, optional
@@ -41,7 +41,7 @@ def load_config(path: Path | None = None, *, root: Path | None = None) -> Projec
     -------
     ProjectConfig
         Validated project configuration, or the built-in defaults when
-        *path* is ``None`` and the root holds no settings file.
+        *path* is ``None`` and the root holds no configuration file.
 
     Raises
     ------

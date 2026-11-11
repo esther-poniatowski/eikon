@@ -221,7 +221,7 @@ class TestCliRoot:
 
 
 class TestCliSettings:
-    """--config names the settings file; without one, eikon runs on its built-in defaults."""
+    """--config names the configuration file; without one, eikon runs on its built-in defaults."""
 
     def test_config_option_relative_to_current_folder(self, tmp_path: Path, monkeypatch):
         root = tmp_path / "root"

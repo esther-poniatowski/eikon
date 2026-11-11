@@ -28,8 +28,8 @@ def main_callback(
         "--config",
         "-c",
         help=(
-            "Settings file to read instead of config/tools/eikon.yml or eikon.yml below the root, "
-            "relative to the current folder."
+            "Configuration file to read instead of config/tools/eikon.yml or eikon.yml below the "
+            "root, relative to the current folder."
         ),
     ),
 ) -> None:

@@ -1,8 +1,8 @@
 """Project session built from the global options of the command line.
 
 The root callback stores ``--root`` and ``--config`` in the context object; each command that works
-on a project builds its session here, so that every command resolves the root and the settings file
-in one way and reports a configuration error with the same exit status.
+on a project builds its session here, so that every command resolves the root and the configuration
+file in one way and reports a configuration error with the same exit status.
 """
 
 from pathlib import Path
@@ -29,13 +29,14 @@ def session_from_context(ctx: typer.Context) -> ProjectSession:
     Returns
     -------
     ProjectSession
-        Session of the project root, with the settings file named by ``--config``, the settings
-        file found below the root, or the built-in defaults.
+        Session of the project root, with the configuration file named by ``--config``, the
+        configuration file found below the root, or the built-in defaults.
 
     Raises
     ------
     typer.Exit
-        With status :data:`USAGE_ERROR` when the settings file is absent, conflicting or invalid.
+        With status :data:`USAGE_ERROR` when the configuration file is absent, conflicting or
+        invalid.
     """
     obj = ctx.find_root().obj
     options: dict[str, Path] = obj if isinstance(obj, dict) else {}

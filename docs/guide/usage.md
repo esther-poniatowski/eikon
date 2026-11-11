@@ -4,8 +4,8 @@ Eikon manages scientific figures through a declarative workflow: define figure
 specifications in YAML, apply composable styles, and export to multiple formats.
 Both a CLI and a Python API expose the same functionality.
 
-For the full command registry, refer to [CLI Reference](cli.md). For project
-settings and export defaults, refer to [Configuration](configuration.md).
+For the full command registry, refer to [CLI Reference](cli.md). For the project
+configuration file and the export defaults, refer to [Configuration](configuration.md).
 
 ## Setting Up a Project
 
@@ -141,7 +141,7 @@ figures in the project. See [Registry](registry.md) for the full reference.
 
 ## Next Steps
 
-- [Configuration](configuration.md) — Project settings, paths, export defaults.
+- [Configuration](configuration.md) — Configuration file, paths, export defaults.
 - [Specifications](specifications.md) — Full reference for figure and panel specs.
 - [Styles](styles.md) — Style sheets, presets, composition.
 - [Layouts](layouts.md) — Grids, shared axes, colorbars, insets.

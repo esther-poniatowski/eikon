@@ -11,7 +11,9 @@ from eikon.exceptions import ConfigConflictError
 def cli_init(
     path: str = typer.Argument(".", help="Project directory to initialize."),
     force: bool = typer.Option(
-        False, "--force", help="Overwrite the settings file and the example specs if they exist."
+        False,
+        "--force",
+        help="Overwrite the configuration file and the example specs if they exist.",
     ),
 ) -> None:
     """Initialize an eikon project."""

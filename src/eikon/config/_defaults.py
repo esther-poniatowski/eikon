@@ -22,4 +22,5 @@ CONFIG_FILENAME = "eikon.yml"
 
 CONFIG_LOCATIONS = (Path("config") / "tools" / CONFIG_FILENAME, Path(CONFIG_FILENAME))
 """Places of the configuration file below a project root: ``config/tools/``, where a project keeps
-the settings of its tools off its root, and the root itself.  A root holding both is an error."""
+the configuration files of its tools off its root, and the root itself.  A root holding both is an
+error."""
